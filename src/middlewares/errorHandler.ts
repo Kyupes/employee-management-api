@@ -9,7 +9,7 @@ export const globalErrorHandler = (
 ) => {
     let statusCode = 500;
     let message = "Internal server Error";
-    let errors: any[] | undefined = [];
+    let errors: any[] | undefined;
     if ( err instanceof AppError ){
         statusCode = err.statusCode;
         message = err.message;

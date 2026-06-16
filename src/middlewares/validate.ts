@@ -9,7 +9,7 @@ export const validate = (schema: ZodType) => {
             next();
         } catch (error) {
             if (error instanceof ZodError){
-                const result = error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`);
+                const result = error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message }));
                 next(new AppError("Validation failed", 400, result));
                 return;
             }
