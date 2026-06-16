@@ -1,36 +1,8 @@
 import * as repository from "../repository/employeesRepository";
 import * as types from "../types/employee";
 import * as utils from "../utils/createError";
-
-function isEmployeeDataIncomplete(data: types.CreateEmployeeInput): boolean{
-    return !data.name ||
-    data.role === undefined ||
-    data.salary === undefined ||
-    data.active === undefined;
-}
-
-function isValidEmployeeData(employeeData: types.CreateEmployeeInput): boolean{
-    return typeof(employeeData.name) === "string" &&
-    typeof(employeeData.role) === "string" &&
-    !isNaN(employeeData.salary) &&
-    typeof(employeeData.active) === "boolean";
-}
-
-function buildEmployee(data: types.CreateEmployeeInput): types.CreateEmployeeInput{
-    if (isEmployeeDataIncomplete(data)){
-        throw utils.createError("Missing parameters for creating employee", 400);
-    }
-    if (!isValidEmployeeData(data)){
-        throw utils.createError("Invalid data provided", 400);
-    }
-    const newEmployeeData: types.CreateEmployeeInput = {
-        name: data.name,
-        role: data.role,
-        salary: data.salary,
-        active: data.active
-    }
-    return newEmployeeData;
-}
+import { CreateEmployeeInput } from "../schemas/createEmployeeSchema";
+import { AppError } from "../errors/appError";
 
 function calculateAverageSalary(employees: types.Employee[]): number{
     if (employees.length === 0) return 0;
@@ -75,13 +47,12 @@ export async function findEmployeeById(id: string): Promise<types.Employee>{
     return employee;
 }
 
-export async function createEmployee(data: types.CreateEmployeeInput): Promise<types.Employee>{
+export async function createEmployee(data: CreateEmployeeInput): Promise<types.Employee>{
     const employeeExists = await repository.findByName(data.name);
-    if (employeeExists !== undefined){
-        throw utils.createError("Employee already exists", 400);
+    if (employeeExists){
+        throw new AppError("Employee already exists", 409);
     }
-    const newEmployee = buildEmployee(data);
-    const employee = await repository.create(newEmployee);
+    const employee = await repository.create(data);
     return employee;
 }
 

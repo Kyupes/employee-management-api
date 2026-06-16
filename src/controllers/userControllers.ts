@@ -1,6 +1,7 @@
 import * as services from "../services/employeesServices";
 import * as types from "../types/employee";
 import { Request, Response } from "express";
+import { CreateEmployeeInput } from "../schemas/createEmployeeSchema";
 
 function parseHttpError(error: unknown): types.HttpError{
     if ((typeof(error) === "object" && error !== null
@@ -12,7 +13,7 @@ function parseHttpError(error: unknown): types.HttpError{
         }
     }
     return {
-        message: "Generic Error Message because yeah, why not",
+        message: "Generic Error Message because yeah",
         status: 500
     };
 }
@@ -22,13 +23,8 @@ export async function testServer(req: Request, res: Response){
 }
 
 export async function getAllEmployees(req: Request, res: Response){
-    try{
-        const employees = await services.getAllEmployees();
-        return res.status(200).json(employees);
-    } catch (error) {
-        const err = parseHttpError(error);
-        return res.status(err.status).json({ error: err.message });
-    }
+    const employees = await services.getAllEmployees();
+    return res.status(200).json(employees);
 }
 
 export async function getEmployeeById(
@@ -51,13 +47,8 @@ export async function createEmployee(
     types.CreateEmployeeInput>, 
     res: Response
 ){
-    try {
-        const employee = await services.createEmployee(req.body);
-        return res.status(201).json(employee);
-    } catch (error) {
-        const err = parseHttpError(error);
-        return res.status(err.status).json({ error: err.message });
-    }
+    const employee = await services.createEmployee(req.body);
+    return res.status(201).json(employee);
 }
 
 export async function updateEmployee(

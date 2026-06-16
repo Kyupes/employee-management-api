@@ -1,11 +1,13 @@
-import type { CreateEmployeeInput, Employee, UpdateEmployeeInput } from "../types/employee";
+import type { Employee, UpdateEmployeeInput } from "../types/employee";
 import { pool } from "../config/db";
+import { CreateEmployeeInput } from "../schemas/createEmployeeSchema";
 
-export async function findByName(name: string): Promise<Employee>{
+export async function findByName(name: string): Promise<Employee | null>{
     const result = await pool.query(
         "SELECT * FROM employees WHERE LOWER(name) LIKE LOWER($1);",
         [name]
     );
+    if (!result.rows[0]) return null;
     return result.rows[0];
 }
 
@@ -23,7 +25,7 @@ export async function findAll(): Promise<Employee[]>{
     return result.rows;
 }
 
-export async function create(employee: CreateEmployeeInput): Promise<Employee>{
+export async function create(employee: CreateEmployeeInput): Promise<Employee> {
     const result = await pool.query(
         "INSERT INTO employees(name, role, salary, active) VALUES($1, $2, $3, $4) RETURNING *;",
         [employee.name, employee.role, employee.salary, employee.active],
