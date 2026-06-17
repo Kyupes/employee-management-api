@@ -19,7 +19,7 @@ export async function getEmployeeById(
     req: Request<{ id: string }>, 
     res: Response
 ){
-    const employee = await services.findEmployeeById(req.params.id);
+    const employee = await services.findEmployeeById(Number(req.params.id));
     return res.status(200).json(employee);
 }
 

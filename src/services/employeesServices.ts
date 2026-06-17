@@ -35,14 +35,10 @@ export async function getAllEmployees(){
     return await repository.findAll();
 }
 
-export async function findEmployeeById(id: string): Promise<types.Employee>{
-    if (isNaN(Number(id)) || id.trim().length === 0){
-        throw utils.createError("Provided id is not a number", 400);
-    }
-    const idNumber = Number(id);
-    const employee = await repository.findById(idNumber);
-    if (employee === null){
-        throw utils.createError("Employee not found", 404);
+export async function findEmployeeById(id: number): Promise<types.Employee>{
+    const employee = await repository.findById(id);
+    if (!employee){
+        throw new AppError("Employee not found", 404);
     }
     return employee;
 }
@@ -60,7 +56,7 @@ export async function createEmployee(data: CreateEmployeeInput): Promise<types.E
 export async function updateEmployee(data: types.UpdateEmployeeInput, id: number): Promise<types.Employee>{
     const employee = await repository.updateById(id, data);
     if (!employee){
-        throw utils.createError("Employee not found", 404);
+        throw new AppError("Employee not found", 404);
     }
     return employee;
 }
@@ -68,7 +64,7 @@ export async function updateEmployee(data: types.UpdateEmployeeInput, id: number
 export async function deleteEmployeeById(id: number): Promise<void>{
     const deleted = await repository.deleteById(Number(id));
     if (!deleted){
-        throw utils.createError("Employee not found", 404);
+        throw new AppError("Employee not found", 404);
     }
 }
 
