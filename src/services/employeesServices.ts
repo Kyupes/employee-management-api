@@ -56,18 +56,8 @@ export async function createEmployee(data: CreateEmployeeInput): Promise<types.E
     return employee;
 }
 
-function validateFields(data: types.UpdateEmployeeInput): void{
-    if (data.name === undefined || data.role === undefined || data.salary === undefined || data.active === undefined){
-        throw utils.createError("Parameters missing for update", 400);
-    }
-    if (data.salary < 1000){
-        throw utils.createError("Salary cannot be less than 1000", 400);
-    }
-    // may add more bussiness rules (don't know which)
-}
 
 export async function updateEmployee(data: types.UpdateEmployeeInput, id: number): Promise<types.Employee>{
-    validateFields(data);
     const employee = await repository.updateById(id, data);
     if (!employee){
         throw utils.createError("Employee not found", 404);
