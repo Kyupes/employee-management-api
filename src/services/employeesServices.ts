@@ -1,6 +1,6 @@
 import * as repository from "../repository/employeesRepository";
 import * as types from "../types/employee";
-import { CreateEmployeeInput, EmployeeIdParams, searchEmployeesQuery } from "../schemas/employee.schema";
+import { CreateEmployeeInput, UpdateEmployeeInput, SearchEmployeesQuery } from "../schemas/employee.schema";
 import { AppError } from "../errors/appError";
 
 function calculateAverageSalary(employees: types.Employee[]): number{
@@ -52,7 +52,7 @@ export async function createEmployee(data: CreateEmployeeInput): Promise<types.E
 }
 
 
-export async function updateEmployee(data: types.UpdateEmployeeInput, id: number): Promise<types.Employee>{
+export async function updateEmployee(data: UpdateEmployeeInput, id: number): Promise<types.Employee>{
     const employee = await repository.updateById(id, data);
     if (!employee){
         throw new AppError("Employee not found", 404);
@@ -67,7 +67,7 @@ export async function deleteEmployeeById(id: number): Promise<void>{
     }
 }
 
-export async function searchEmployees(query: searchEmployeesQuery): Promise<types.Employee[]>{
+export async function searchEmployees(query: SearchEmployeesQuery): Promise<types.Employee[]>{
     let filteredEmployees = await repository.findAll();
     if (query.name){
         const name = query.name;

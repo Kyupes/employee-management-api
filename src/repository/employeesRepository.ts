@@ -1,6 +1,6 @@
 import type { Employee, UpdateEmployeeInput } from "../types/employee";
 import { pool } from "../config/db";
-import { CreateEmployeeInput, EmployeeIdParams, searchEmployeesQuery } from "../schemas/employee.schema";
+import { CreateEmployeeInput } from "../schemas/employee.schema";
 
 export async function findByName(name: string): Promise<Employee | null>{
     const result = await pool.query(

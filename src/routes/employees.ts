@@ -1,7 +1,7 @@
 import express from "express";
 import { validate } from "../middlewares/validate";
-import { createEmployeeSchema, employeeIdParamSchema, searchEmployeesQuerySchema } from "../schemas/employee.schema";
-import * as controllers from "../controllers/userControllers";
+import { createEmployeeSchema, updateEmployeeSchema, employeeIdParamSchema, searchEmployeesQuerySchema } from "../schemas/employee.schema";
+import * as controllers from "../controllers/employeeControllers";
 
 const router = express.Router();
 
@@ -11,7 +11,7 @@ router.get("/employees/search", validate(searchEmployeesQuerySchema, 'query'), c
 router.get("/employees/stats", controllers.getEmployeeStats);
 router.get("/employees/:id", validate(employeeIdParamSchema, 'params'), controllers.getEmployeeById);
 router.post("/employees", validate(createEmployeeSchema, 'body'), controllers.createEmployee);
-router.put("/employees/:id", controllers.updateEmployee);
-router.delete("/employees/:id", controllers.deleteEmployee);
+router.put("/employees/:id", validate(employeeIdParamSchema, 'params'), validate(updateEmployeeSchema, 'body'), controllers.updateEmployee);
+router.delete("/employees/:id", validate(employeeIdParamSchema, 'params'), controllers.deleteEmployee);
 
 export default router;
