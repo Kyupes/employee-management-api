@@ -7,7 +7,8 @@ export const validate = (schema: ZodType, part: RequestPart = 'body') => {
     return (req: Request, res: Response, next: NextFunction) => {
         try {
             const data = schema.parse(req[part]);
-            req.validated = { [part]: data };
+            req.validated = {};
+            req.validated[part] = data;
             next();
         } catch (error) {
             if (error instanceof ZodError){
