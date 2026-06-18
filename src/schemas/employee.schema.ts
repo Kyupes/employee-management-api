@@ -1,0 +1,23 @@
+import { z } from 'zod';
+
+export const createEmployeeSchema = z.object({
+    name: z.string().min(5),
+    role: z.string(),
+    salary: z.number().min(1000),
+    active: z.boolean()
+});
+
+export type CreateEmployeeInput = z.infer<typeof createEmployeeSchema>;
+
+export const employeeIdParamSchema = z.object({
+    id: z.coerce.number().int().positive("ID must be a positive integer"),
+});
+export type EmployeeIdParams = z.infer<typeof employeeIdParamSchema>;
+
+export const searchEmployeesQuerySchema = z.object({
+    name: z.string().optional(),
+    role: z.string().optional(),
+    minSalary: z.coerce.number().optional(),
+    active: z.string().transform(val => val.toLowerCase() === 'true').optional(),
+}).strict();
+export type searchEmployeesQuery = z.infer<typeof searchEmployeesQuerySchema>;
