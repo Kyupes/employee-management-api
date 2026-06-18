@@ -13,20 +13,6 @@ export interface UpdateEmployeeInput {
     active: boolean | undefined;
 }
 
-export interface CreateEmployeeInput {
-    name: string;
-    role: string;
-    salary: number;
-    active: boolean;
-}
-
-export interface Query {
-    name: string | undefined;
-    role: string | undefined;
-    minSalary: string | undefined;
-    active: string | undefined;
-}
-
 export interface HttpError {
     message: string;
     status: number;
