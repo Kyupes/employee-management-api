@@ -1,7 +1,6 @@
 import * as repository from "../repository/employeesRepository";
 import * as types from "../types/employee";
-import * as utils from "../utils/createError";
-import { CreateEmployeeInput } from "../schemas/createEmployeeSchema";
+import { CreateEmployeeInput, EmployeeIdParams, searchEmployeesQuery } from "../schemas/employee.schema";
 import { AppError } from "../errors/appError";
 
 function calculateAverageSalary(employees: types.Employee[]): number{
@@ -68,7 +67,7 @@ export async function deleteEmployeeById(id: number): Promise<void>{
     }
 }
 
-export async function searchEmployees(query: types.Query): Promise<types.Employee[]>{
+export async function searchEmployees(query: searchEmployeesQuery): Promise<types.Employee[]>{
     let filteredEmployees = await repository.findAll();
     if (query.name){
         const name = query.name;
@@ -79,17 +78,11 @@ export async function searchEmployees(query: types.Query): Promise<types.Employe
         filteredEmployees = filteredEmployees.filter(employee => employee.role.toLowerCase().includes(role.toLowerCase()));
     }
     if (query.minSalary){
-        const minSalary = Number(query.minSalary);
-        if (isNaN(minSalary)){
-            throw utils.createError("Provided minSalary is not a number", 400);
-        }
+        const minSalary = query.minSalary;
         filteredEmployees = filteredEmployees.filter(employee => employee.salary >= minSalary);
     }
     if (query.active){
-        if (query.active.toLowerCase() !== "true" && query.active.toLowerCase() !== "false"){
-            throw utils.createError("Provided activity is not boolean", 400);
-        }
-        const activity = query.active === "true" ? true : false;
+        const activity = query.active;
         filteredEmployees = filteredEmployees.filter(employee => employee.active === activity);
     }
     return filteredEmployees;

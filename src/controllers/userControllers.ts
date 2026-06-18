@@ -1,7 +1,7 @@
 import * as services from "../services/employeesServices";
 import * as types from "../types/employee";
 import { Request, Response } from "express";
-import { CreateEmployeeInput } from "../schemas/createEmployeeSchema";
+import { CreateEmployeeInput, EmployeeIdParams, searchEmployeesQuery } from "../schemas/employee.schema";
 
 export async function testServer(req: Request, res: Response){
     return res.send("Server working");
@@ -27,7 +27,8 @@ export async function createEmployee(
     req: Request< {}, {}, CreateEmployeeInput>, 
     res: Response
 ){
-    const employee = await services.createEmployee(req.body);
+    const validatedBody = req.validated?.body as CreateEmployeeInput;
+    const employee = await services.createEmployee(validatedBody);
     return res.status(201).json(employee);
 }
 
@@ -48,10 +49,11 @@ export async function deleteEmployee(
 }
 
 export async function searchEmployees(
-    req: Request<{}, {}, {}, types.Query>,
+    req: Request<{}, {}, {}, searchEmployeesQuery>,
     res: Response
 ){
-    const filteredEmployees = await services.searchEmployees(req.query);
+    const validatedQuery = req.validated?.query as searchEmployeesQuery;
+    const filteredEmployees = await services.searchEmployees(validatedQuery);
     return res.status(200).json(filteredEmployees);
 }
 
