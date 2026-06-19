@@ -1,14 +1,42 @@
 import type { Employee, UpdateEmployeeInput } from "../types/employee";
 import { pool } from "../config/db";
-import { CreateEmployeeInput } from "../schemas/employee.schema";
+import { CreateEmployeeInput, SearchEmployeesQuery } from "../schemas/employee.schema";
 
 export async function findByName(name: string): Promise<Employee | null>{
     const result = await pool.query(
-        "SELECT * FROM employees WHERE LOWER(name) LIKE LOWER($1);",
+        "SELECT * FROM employees WHERE name ILIKE $1;",
         [name]
     );
     if (!result.rows[0]) return null;
     return result.rows[0];
+}
+
+export async function searchAndPaginate(filters: SearchEmployeesQuery): Promise<Employee[]>{
+    const values: (string | number | boolean)[] = [];
+    const conditions: string[] = ["1=1"];
+    if (filters.name) {
+        values.push(filters.name);
+        conditions.push(`name ILIKE $${values.length}`);
+    }
+    if (filters.role){
+        values.push(filters.role);
+        conditions.push(`role ILIKE $${values.length}`);
+    }
+    if (filters.minSalary){
+        values.push(filters.minSalary);
+        conditions.push(`salary > $${values.length}`);
+    }
+    if (filters.active !== undefined){
+        values.push(filters.active);
+        conditions.push(`active = $${values.length}`);
+    } 
+    const offset = (filters.page - 1) * filters.limit;
+    const limitIndex = values.length + 1;
+    const offsetIndex = values.length + 2;
+    values.push(filters.limit, offset);
+    const finalQuery = `SELECT * FROM employees WHERE ${conditions.join(' AND ')} LIMIT $${limitIndex} OFFSET $${offsetIndex};`;
+    const result = await pool.query(finalQuery, values);
+    return result.rows;
 }
 
 export async function findById(id: number): Promise<Employee | null>{

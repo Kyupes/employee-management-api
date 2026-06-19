@@ -68,24 +68,7 @@ export async function deleteEmployeeById(id: number): Promise<void>{
 }
 
 export async function searchEmployees(query: SearchEmployeesQuery): Promise<types.Employee[]>{
-    let filteredEmployees = await repository.findAll();
-    if (query.name){
-        const name = query.name;
-        filteredEmployees = filteredEmployees.filter(employee => employee.name.toLowerCase().includes(name.toLowerCase()));
-    }
-    if (query.role){
-        const role = query.role;
-        filteredEmployees = filteredEmployees.filter(employee => employee.role.toLowerCase().includes(role.toLowerCase()));
-    }
-    if (query.minSalary){
-        const minSalary = query.minSalary;
-        filteredEmployees = filteredEmployees.filter(employee => employee.salary >= minSalary);
-    }
-    if (query.active){
-        const activity = query.active;
-        filteredEmployees = filteredEmployees.filter(employee => employee.active === activity);
-    }
-    return filteredEmployees;
+    return await repository.searchAndPaginate(query);
 }
 
 export async function getEmployeeStats(): Promise<types.Stats>{
