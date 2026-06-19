@@ -26,5 +26,7 @@ export const searchEmployeesQuerySchema = z.object({
     role: z.string().optional(),
     minSalary: z.coerce.number().optional(),
     active: z.string().transform(val => val.toLowerCase() === 'true').optional(),
+    page: z.coerce.number().min(1).default(1),
+    limit: z.coerce.number().min(1).default(10)
 }).strict();
 export type SearchEmployeesQuery = z.infer<typeof searchEmployeesQuerySchema>;
