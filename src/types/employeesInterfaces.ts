@@ -6,28 +6,30 @@ export interface Employee {
     active: boolean;
 }
 
-export interface UpdateEmployeeInput {
-    name: string | undefined;
-    role: string | undefined;
-    salary: number | undefined;
-    active: boolean | undefined;
-}
-
-export interface HttpError {
-    message: string;
-    status: number;
-}
-
 export interface RoleCount {
     [key: string]: number;
 }
 
 export interface Stats {
-    totalEmployees: number;
-    activeEmployees: number;
-    inactiveEmployees: number;
-    averageSalary: number;
-    highestSalary: number;
-    lowestSalary: number;
+    totalEmployees: string;
+    activeEmployees: string;
+    inactiveEmployees: string;
+    averageSalary: string;
+    highestSalary: string;
+    lowestSalary: string;
     roles: RoleCount;
+}
+
+export interface GeneralStats {
+    totalcount: string;
+    activecount: string;
+    inactivecount: string;
+    averagesalary: string;
+    highestsalary: string;
+    lowestsalary: string;
+}
+
+export interface RoleCountRow {
+    role: string;
+    count: number;
 }

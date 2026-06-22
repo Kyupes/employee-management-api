@@ -3,33 +3,6 @@ import * as types from "../types/employeesInterfaces";
 import { CreateEmployeeInput, UpdateEmployeeInput, SearchEmployeesQuery } from "../schemas/employee.schema";
 import { AppError } from "../errors/appError";
 
-function calculateAverageSalary(employees: types.Employee[]): number{
-    if (employees.length === 0) return 0;
-    return employees.reduce((sum, employee) => sum + employee.salary, 0)/employees.length;
-}
-
-function getMaxSalary(employees: types.Employee[]): number{
-    if (employees.length === 0) return 0;
-    return employees.reduce((highest, employee) => highest = employee.salary > highest ? employee.salary : highest, 0);
-}
-
-function getMinSalary(employees: types.Employee[]): number{
-    if (employees.length === 0) return 0;
-    return employees.reduce((lowest, employee) => lowest = employee.salary < lowest ? employee.salary : lowest, Infinity);
-}
-
-function countEmployeesByRole(employees: types.Employee[]): types.RoleCount{
-    const roles: types.RoleCount = {};
-    for (const employee of employees){
-        const role = employee.role;
-        if (roles[role] !== undefined)
-            roles[role]++;
-        else
-            roles[role] = 1;
-    }
-    return roles;
-}
-
 export async function getAllEmployees(){
     return await repository.findAll();
 }
@@ -51,7 +24,6 @@ export async function createEmployee(data: CreateEmployeeInput): Promise<types.E
     return employee;
 }
 
-
 export async function updateEmployee(data: UpdateEmployeeInput, id: number): Promise<types.Employee>{
     const employee = await repository.updateById(id, data);
     if (!employee){
@@ -72,16 +44,19 @@ export async function searchEmployees(query: SearchEmployeesQuery): Promise<type
 }
 
 export async function getEmployeeStats(): Promise<types.Stats>{
-    const employees = await repository.findAll();
-    const length = employees.length;
-    const stats: types.Stats = {
-        totalEmployees: length,
-        activeEmployees: employees.filter(employee => employee.active).length,
-        inactiveEmployees: employees.filter(employee => !employee.active).length,
-        averageSalary: Number(calculateAverageSalary(employees).toFixed(2)),
-        highestSalary: getMaxSalary(employees),
-        lowestSalary: getMinSalary(employees),
-        roles: countEmployeesByRole(employees)
+    const generalStats: types.GeneralStats = await repository.getGeneralStats();
+    const rolesCount: types.RoleCountRow[] = await repository.getRolesCount();
+    const rolesCountObject = rolesCount.reduce<types.RoleCount>((roleObject, currRole) => {
+        roleObject[currRole.role] = currRole.count;
+        return roleObject;
+    }, {} as types.RoleCount);
+    return {
+        totalEmployees: generalStats.totalcount,
+        activeEmployees: generalStats.activecount,
+        inactiveEmployees: generalStats.inactivecount,
+        averageSalary: Number(generalStats.averagesalary).toFixed(2),
+        highestSalary: generalStats.highestsalary,
+        lowestSalary: generalStats.lowestsalary,
+        roles: rolesCountObject
     };
-    return stats;
 }

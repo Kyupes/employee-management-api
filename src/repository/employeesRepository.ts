@@ -1,6 +1,6 @@
-import type { Employee, UpdateEmployeeInput } from "../types/employeesInterfaces";
+import type { Employee, GeneralStats, RoleCountRow } from "../types/employeesInterfaces";
 import { pool } from "../config/db";
-import { CreateEmployeeInput, SearchEmployeesQuery } from "../schemas/employee.schema";
+import { CreateEmployeeInput, SearchEmployeesQuery, UpdateEmployeeInput } from "../schemas/employee.schema";
 
 export async function findByName(name: string): Promise<Employee | null>{
     const result = await pool.query(
@@ -77,4 +77,29 @@ export async function updateById(id: number, newData: UpdateEmployeeInput): Prom
     );
     if (result.rowCount) return await findById(id);
     return null;
+}
+
+export async function getGeneralStats(): Promise<GeneralStats>{
+    const query = `
+    SELECT 
+	    COUNT(*) as totalCount, 
+	    COUNT(*) FILTER (WHERE active = true) AS activeCount,
+	    COUNT(*) FILTER (WHERE active = false) AS inactiveCount,
+	    AVG(salary) as averageSalary, 
+	    MAX(salary) as highestSalary,
+	    MIN(salary) as lowestSalary
+    FROM employees;
+    `;
+    const result = await pool.query(query);
+    return result.rows[0];
+}
+
+export async function getRolesCount(): Promise<RoleCountRow[]>{
+    const query = `
+    SELECT role, COUNT(*) AS count
+    FROM employees
+    GROUP BY role;
+    `;
+    const result = await pool.query(query);
+    return result.rows;
 }
