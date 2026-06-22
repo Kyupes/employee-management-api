@@ -1,4 +1,4 @@
-import type { Employee, UpdateEmployeeInput } from "../types/employee";
+import type { Employee, UpdateEmployeeInput } from "../types/employeesInterfaces";
 import { pool } from "../config/db";
 import { CreateEmployeeInput, SearchEmployeesQuery } from "../schemas/employee.schema";
 

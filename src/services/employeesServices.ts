@@ -1,5 +1,5 @@
 import * as repository from "../repository/employeesRepository";
-import * as types from "../types/employee";
+import * as types from "../types/employeesInterfaces";
 import { CreateEmployeeInput, UpdateEmployeeInput, SearchEmployeesQuery } from "../schemas/employee.schema";
 import { AppError } from "../errors/appError";
 

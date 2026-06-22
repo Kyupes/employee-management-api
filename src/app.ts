@@ -1,5 +1,5 @@
 import express from "express";
-import employeeRoutes from "./routes/employees";
+import employeeRoutes from "./routes/employeesRoutes";
 import { globalErrorHandler } from "./middlewares/errorHandler";
 export const app = express();
 
