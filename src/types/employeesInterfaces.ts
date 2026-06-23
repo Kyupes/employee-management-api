@@ -11,25 +11,25 @@ export interface RoleCount {
 }
 
 export interface Stats {
-    totalEmployees: string;
-    activeEmployees: string;
-    inactiveEmployees: string;
-    averageSalary: string;
-    highestSalary: string;
-    lowestSalary: string;
+    totalEmployees: number;
+    activeEmployees: number;
+    inactiveEmployees: number;
+    averageSalary: number;
+    highestSalary: number;
+    lowestSalary: number;
     roles: RoleCount;
 }
 
 export interface GeneralStats {
-    totalcount: string;
-    activecount: string;
-    inactivecount: string;
-    averagesalary: string;
-    highestsalary: string;
-    lowestsalary: string;
+    totalCount: string;
+    activeCount: string;
+    inactiveCount: string;
+    averageSalary: string;
+    highestSalary: string;
+    lowestSalary: string;
 }
 
 export interface RoleCountRow {
     role: string;
-    count: number;
+    count: string;
 }

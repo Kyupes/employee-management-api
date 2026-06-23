@@ -47,16 +47,16 @@ export async function getEmployeeStats(): Promise<Stats>{
     const generalStats: GeneralStats = await repository.getGeneralStats();
     const rolesCount: RoleCountRow[] = await repository.getRolesCount();
     const rolesCountObject = rolesCount.reduce<RoleCount>((roleObject, currRole) => {
-        roleObject[currRole.role] = currRole.count;
+        roleObject[currRole.role] = Number(currRole.count);
         return roleObject;
     }, {} as RoleCount);
     return {
-        totalEmployees: generalStats.totalcount,
-        activeEmployees: generalStats.activecount,
-        inactiveEmployees: generalStats.inactivecount,
-        averageSalary: Number(generalStats.averagesalary).toFixed(2),
-        highestSalary: generalStats.highestsalary,
-        lowestSalary: generalStats.lowestsalary,
+        totalEmployees: Number(generalStats.totalCount),
+        activeEmployees: Number(generalStats.activeCount),
+        inactiveEmployees: Number(generalStats.inactiveCount),
+        averageSalary: Number(Number(generalStats.averageSalary).toFixed(2)),
+        highestSalary: Number(generalStats.highestSalary),
+        lowestSalary: Number(generalStats.lowestSalary),
         roles: rolesCountObject
     };
 }

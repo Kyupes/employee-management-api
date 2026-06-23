@@ -82,12 +82,12 @@ export async function updateById(id: number, newData: UpdateEmployeeInput): Prom
 export async function getGeneralStats(): Promise<GeneralStats>{
     const query = `
     SELECT 
-	    COUNT(*) as totalCount, 
-	    COUNT(*) FILTER (WHERE active = true) AS activeCount,
-	    COUNT(*) FILTER (WHERE active = false) AS inactiveCount,
-	    AVG(salary) as averageSalary, 
-	    MAX(salary) as highestSalary,
-	    MIN(salary) as lowestSalary
+	    COUNT(*) as "totalCount", 
+	    COUNT(*) FILTER (WHERE active = true) AS "activeCount",
+	    COUNT(*) FILTER (WHERE active = false) AS "inactiveCount",
+	    AVG(salary) as "averageSalary", 
+	    MAX(salary) as "highestSalary",
+	    MIN(salary) as "lowestSalary"
     FROM employees;
     `;
     const result = await pool.query(query);
