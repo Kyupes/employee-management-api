@@ -8,3 +8,9 @@ export const UserRegistrySchema = z.object({
     .regex(/[0-9]/, "Must contain at least one number"),
 });
 export type UserRegistryInput = z.infer<typeof UserRegistrySchema>;
+
+export const UserLoginSchema = z.object({
+    email: z.email("Invalid email format"),
+    password: z.string(),
+});
+export type UserLoginInput = z.infer<typeof UserLoginSchema>;

@@ -8,6 +8,10 @@ declare global {
                 params?: unknown;
                 query?: unknown;
             };
+            user?: {
+                userId: number;
+                email: string;
+            };
         }
     }
 }
