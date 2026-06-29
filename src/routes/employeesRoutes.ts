@@ -8,11 +8,11 @@ const router = express.Router();
 
 router.get("/", controllers.testServer);
 router.get("/employees", authenticate, controllers.getAllEmployees);
-router.get("/employees/search", validate(searchEmployeesQuerySchema, 'query'), controllers.searchEmployees);
-router.get("/employees/stats", controllers.getEmployeeStats);
-router.get("/employees/:id", validate(employeeIdParamSchema, 'params'), controllers.getEmployeeById);
-router.post("/employees", validate(createEmployeeSchema, 'body'), controllers.createEmployee);
-router.put("/employees/:id", validate(employeeIdParamSchema, 'params'), validate(updateEmployeeSchema, 'body'), controllers.updateEmployee);
-router.delete("/employees/:id", validate(employeeIdParamSchema, 'params'), controllers.deleteEmployee);
+router.get("/employees/search", authenticate, validate(searchEmployeesQuerySchema, 'query'), controllers.searchEmployees);
+router.get("/employees/stats", authenticate, controllers.getEmployeeStats);
+router.get("/employees/:id", authenticate, validate(employeeIdParamSchema, 'params'), controllers.getEmployeeById);
+router.post("/employees", authenticate, validate(createEmployeeSchema, 'body'), controllers.createEmployee);
+router.put("/employees/:id", authenticate, validate(employeeIdParamSchema, 'params'), validate(updateEmployeeSchema, 'body'), controllers.updateEmployee);
+router.delete("/employees/:id", authenticate, validate(employeeIdParamSchema, 'params'), controllers.deleteEmployee);
 
 export default router;
