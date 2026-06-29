@@ -1,10 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../errors/appError";
 import jwt, { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import { UserRole } from '../types/userInterfaces';
 
 interface JwtPayload {
     userId: number;
     email: string;
+    role: UserRole;
 }
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {

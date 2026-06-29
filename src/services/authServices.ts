@@ -11,7 +11,7 @@ export async function registerUser(data: UserRegistryInput): Promise<UserRespons
         throw new AppError("Email already in use", 409);
     }
     const passwordHash = await bcrypt.hash(data.password, 10);
-    const user = await repository.create(data.email, passwordHash);
+    const user = await repository.create(data.email, passwordHash, 'user');
     return {
         id: user.id,
         email: user.email,
@@ -28,7 +28,7 @@ export async function loginUser(data: UserLoginInput): Promise<{ token: string; 
     if (!comparePassword){
         throw new AppError("Invalid credentials", 401);
     }
-    const payload = { userId: user.id, email: user.email };
+    const payload = { userId: user.id, email: user.email, role: user.role };
     const options = { expiresIn: process.env.JWT_EXPIRES_IN || '1h' } as jwt.SignOptions;
     const token = jwt.sign(payload, process.env.JWT_SECRET!, options);
     const responseUser: UserResponse = { id: user.id, email: user.email, created_at: user.created_at };

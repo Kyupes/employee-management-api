@@ -1,4 +1,5 @@
 import { Request as ExpressRequest } from 'express';
+import { UserRole } from '../types/userInterfaces';
 
 declare global {
     namespace Express {
@@ -11,6 +12,7 @@ declare global {
             user?: {
                 userId: number;
                 email: string;
+                role: UserRole;
             };
         }
     }
