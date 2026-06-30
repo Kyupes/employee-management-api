@@ -3,13 +3,15 @@ import { pool } from "../config/db";
 import { CreateEmployeeInput, SearchEmployeesQuery, UpdateEmployeeInput } from "../schemas/employee.schema";
 import { UserRole } from "../types/userInterfaces";
 
-export async function findByName(name: string): Promise<Employee | null>{
-    const result = await pool.query(
-        "SELECT * FROM employees WHERE name ILIKE $1;",
-        [name]
-    );
-    if (!result.rows[0]) return null;
-    return result.rows[0];
+export async function findByName(name: string, userId: number, role: UserRole): Promise<Employee | null>{
+    let query = "SELECT * FROM employees WHERE name ILIKE $1";
+    const values: (number | string)[] = [name];
+    if (role != 'admin'){
+        query += " AND user_id = $2";
+        values.push(userId);
+    }
+    const result = await pool.query(query, values);
+    return result.rows[0] || null;
 }
 
 export async function searchAndPaginate(filters: SearchEmployeesQuery): Promise<Employee[]>{

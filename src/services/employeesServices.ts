@@ -16,8 +16,8 @@ export async function findEmployeeById(id: number, userId: number, role: UserRol
     return employee;
 }
 
-export async function createEmployee(data: CreateEmployeeInput, userId: number): Promise<Employee>{
-    const employeeExists = await repository.findByName(data.name);
+export async function createEmployee(data: CreateEmployeeInput, userId: number, role: UserRole): Promise<Employee>{
+    const employeeExists = await repository.findByName(data.name, userId, role);
     if (employeeExists){
         throw new AppError("Employee already exists", 409);
     }
