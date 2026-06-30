@@ -14,7 +14,7 @@ export async function findByName(name: string, userId: number, role: UserRole): 
     return result.rows[0] || null;
 }
 
-export async function searchAndPaginate(filters: SearchEmployeesQuery): Promise<Employee[]>{
+export async function searchAndPaginate(filters: SearchEmployeesQuery, userId: number, role: UserRole): Promise<Employee[]>{
     const values: (string | number | boolean)[] = [];
     const conditions: string[] = ["1=1"];
     if (filters.name) {
@@ -33,6 +33,10 @@ export async function searchAndPaginate(filters: SearchEmployeesQuery): Promise<
         values.push(filters.active);
         conditions.push(`active = $${values.length}`);
     } 
+    if (role != 'admin'){
+        values.push(userId);
+        conditions.push(`user_id = $${values.length}`);
+    }
     const offset = (filters.page - 1) * filters.limit;
     const limitIndex = values.length + 1;
     const offsetIndex = values.length + 2;

@@ -40,8 +40,8 @@ export async function deleteEmployeeById(id: number): Promise<void>{
     }
 }
 
-export async function searchEmployees(query: SearchEmployeesQuery): Promise<Employee[]>{
-    return await repository.searchAndPaginate(query);
+export async function searchEmployees(query: SearchEmployeesQuery, userId: number, role: UserRole): Promise<Employee[]>{
+    return await repository.searchAndPaginate(query, userId, role);
 }
 
 export async function getEmployeeStats(): Promise<Stats>{

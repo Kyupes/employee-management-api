@@ -41,7 +41,8 @@ export async function deleteEmployee(req: Request, res: Response){
 
 export async function searchEmployees(req: Request,res: Response){
     const validatedQuery = req.validated?.query as SearchEmployeesQuery;
-    const filteredEmployees = await services.searchEmployees(validatedQuery);
+    const user = req.user!;
+    const filteredEmployees = await services.searchEmployees(validatedQuery, user.userId, user.role);
     return res.status(200).json(filteredEmployees);
 }
 
