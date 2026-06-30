@@ -2,30 +2,31 @@ import * as repository from "../repository/employeesRepository";
 import { Employee, Stats, GeneralStats, RoleCount, RoleCountRow } from "../types/employeesInterfaces";
 import { CreateEmployeeInput, UpdateEmployeeInput, SearchEmployeesQuery } from "../schemas/employee.schema";
 import { AppError } from "../errors/appError";
+import { UserRole } from "../types/userInterfaces";
 
 export async function getAllEmployees(){
     return await repository.findAll();
 }
 
-export async function findEmployeeById(id: number): Promise<Employee>{
-    const employee = await repository.findById(id);
+export async function findEmployeeById(id: number, userId: number, role: UserRole): Promise<Employee>{
+    const employee = await repository.findById(id, userId, role);
     if (!employee){
         throw new AppError("Employee not found", 404);
     }
     return employee;
 }
 
-export async function createEmployee(data: CreateEmployeeInput): Promise<Employee>{
+export async function createEmployee(data: CreateEmployeeInput, userId: number): Promise<Employee>{
     const employeeExists = await repository.findByName(data.name);
     if (employeeExists){
         throw new AppError("Employee already exists", 409);
     }
-    const employee = await repository.create(data);
+    const employee = await repository.create(data, userId);
     return employee;
 }
 
-export async function updateEmployee(data: UpdateEmployeeInput, id: number): Promise<Employee>{
-    const employee = await repository.updateById(id, data);
+export async function updateEmployee(id: number, data: UpdateEmployeeInput, userId: number, role: UserRole): Promise<Employee>{
+    const employee = await repository.updateById(id, data, userId, role);
     if (!employee){
         throw new AppError("Employee not found", 404);
     }

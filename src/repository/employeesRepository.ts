@@ -1,6 +1,7 @@
 import type { Employee, GeneralStats, RoleCountRow } from "../types/employeesInterfaces";
 import { pool } from "../config/db";
 import { CreateEmployeeInput, SearchEmployeesQuery, UpdateEmployeeInput } from "../schemas/employee.schema";
+import { UserRole } from "../types/userInterfaces";
 
 export async function findByName(name: string): Promise<Employee | null>{
     const result = await pool.query(
@@ -39,13 +40,15 @@ export async function searchAndPaginate(filters: SearchEmployeesQuery): Promise<
     return result.rows;
 }
 
-export async function findById(id: number): Promise<Employee | null>{
-    const result = await pool.query(
-        "SELECT * FROM employees WHERE id = $1;",
-        [id]
-    );
-    if (result.rowCount) return result.rows[0];
-    return null;
+export async function findById(id: number, userId: number, role: UserRole): Promise<Employee | null>{
+    let query = "SELECT * FROM employees WHERE id = $1";
+    const values: number[] = [id];
+    if (role != 'admin'){
+        query += " AND user_id = $2";
+        values.push(userId);
+    }
+    const result = await pool.query(query, values);
+    return result.rows[0] || null;
 }
 
 export async function findAll(): Promise<Employee[]>{
@@ -53,10 +56,10 @@ export async function findAll(): Promise<Employee[]>{
     return result.rows;
 }
 
-export async function create(employee: CreateEmployeeInput): Promise<Employee> {
+export async function create(employee: CreateEmployeeInput, userId: number): Promise<Employee> {
     const result = await pool.query(
-        "INSERT INTO employees(name, role, salary, active) VALUES($1, $2, $3, $4) RETURNING *;",
-        [employee.name, employee.role, employee.salary, employee.active],
+        "INSERT INTO employees(name, role, salary, active, user_id) VALUES($1, $2, $3, $4, $5) RETURNING *;",
+        [employee.name, employee.role, employee.salary, employee.active, userId],
     );
     return result.rows[0];
 }
@@ -70,13 +73,16 @@ export async function deleteById(id: number): Promise<boolean>{
     return false;
 }
 
-export async function updateById(id: number, newData: UpdateEmployeeInput): Promise<Employee | null>{
-    const result = await pool.query(
-        "UPDATE employees SET name = $1, role = $2, salary = $3, active = $4 WHERE id = $5;",
-        [newData.name, newData.role, newData.salary, newData.active, id]
-    );
-    if (result.rowCount) return await findById(id);
-    return null;
+export async function updateById(id: number, newData: UpdateEmployeeInput, userId: number, role: UserRole): Promise<Employee | null>{
+    let query = "UPDATE employees SET name = $1, role = $2, salary = $3, active = $4 WHERE id = $5";
+    const values: (string | number | boolean)[] = [newData.name, newData.role, newData.salary, newData.active, id];
+    if (role != 'admin'){
+        query += " AND user_id = $6";
+        values.push(userId);
+    }
+    query += " RETURNING *;"
+    const result = await pool.query(query, values);
+    return result.rows[0] || null;
 }
 
 export async function getGeneralStats(): Promise<GeneralStats>{

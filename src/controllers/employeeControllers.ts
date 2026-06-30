@@ -13,20 +13,23 @@ export async function getAllEmployees(req: Request, res: Response){
 
 export async function getEmployeeById(req: Request, res: Response){
     const params = req.validated?.params as EmployeeIdParams;
-    const employee = await services.findEmployeeById(params.id);
+    const user = req.user!;
+    const employee = await services.findEmployeeById(params.id, user.userId, user.role);
     return res.status(200).json(employee);
 }
 
 export async function createEmployee(req: Request, res: Response){
     const validatedBody = req.validated?.body as CreateEmployeeInput;
-    const employee = await services.createEmployee(validatedBody);
+    const user = req.user!;
+    const employee = await services.createEmployee(validatedBody, user.userId);
     return res.status(201).json(employee);
 }
 
 export async function updateEmployee(req: Request,res: Response){
     const params = req.validated?.params as EmployeeIdParams;
     const body = req.validated?.body as UpdateEmployeeInput;
-    const updatedEmployee = await services.updateEmployee(body, params.id);
+    const user = req.user!;
+    const updatedEmployee = await services.updateEmployee(params.id, body, user.userId, user.role);
     return res.status(200).json(updatedEmployee);
 }
 
