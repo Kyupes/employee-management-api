@@ -44,9 +44,9 @@ export async function searchEmployees(query: SearchEmployeesQuery, userId: numbe
     return await repository.searchAndPaginate(query, userId, role);
 }
 
-export async function getEmployeeStats(): Promise<Stats>{
-    const generalStats: GeneralStats = await repository.getGeneralStats();
-    const rolesCount: RoleCountRow[] = await repository.getRolesCount();
+export async function getEmployeeStats(userId: number, role: UserRole): Promise<Stats>{
+    const generalStats: GeneralStats = await repository.getGeneralStats(userId, role);
+    const rolesCount: RoleCountRow[] = await repository.getRolesCount(userId, role);
     const rolesCountObject = rolesCount.reduce<RoleCount>((roleObject, currRole) => {
         roleObject[currRole.role] = Number(currRole.count);
         return roleObject;

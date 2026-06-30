@@ -91,8 +91,8 @@ export async function updateById(id: number, newData: UpdateEmployeeInput, userI
     return result.rows[0] || null;
 }
 
-export async function getGeneralStats(): Promise<GeneralStats>{
-    const query = `
+export async function getGeneralStats(userId: number, role: UserRole): Promise<GeneralStats>{
+    let query = `
     SELECT 
 	    COUNT(*) as "totalCount", 
 	    COUNT(*) FILTER (WHERE active = true) AS "activeCount",
@@ -100,18 +100,28 @@ export async function getGeneralStats(): Promise<GeneralStats>{
 	    AVG(salary) as "averageSalary", 
 	    MAX(salary) as "highestSalary",
 	    MIN(salary) as "lowestSalary"
-    FROM employees;
+    FROM employees
     `;
-    const result = await pool.query(query);
+    let value = [];
+    if (role != 'admin'){
+        query += " WHERE user_id = $1";
+        value.push(userId);
+    }
+    const result = await pool.query(query, value);
     return result.rows[0];
 }
 
-export async function getRolesCount(): Promise<RoleCountRow[]>{
-    const query = `
+export async function getRolesCount(userId: number, role: UserRole): Promise<RoleCountRow[]>{
+    let query = `
     SELECT role, COUNT(*) AS count
     FROM employees
-    GROUP BY role;
     `;
-    const result = await pool.query(query);
+    let value = [];
+    if (role != 'admin'){
+        query += " WHERE user_id = $1";
+        value.push(userId);
+    }
+    query += " GROUP BY role;"
+    const result = await pool.query(query, value);
     return result.rows;
 }

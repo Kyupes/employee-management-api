@@ -47,6 +47,7 @@ export async function searchEmployees(req: Request,res: Response){
 }
 
 export async function getEmployeeStats(req: Request, res: Response){
-    const stats = await services.getEmployeeStats();
+    const user = req.user!;
+    const stats = await services.getEmployeeStats(user.userId, user.role);
     return res.status(200).json(stats);
 }
