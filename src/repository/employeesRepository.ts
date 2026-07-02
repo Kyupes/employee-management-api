@@ -57,8 +57,14 @@ export async function findById(id: number, userId: number, role: UserRole): Prom
     return result.rows[0] || null;
 }
 
-export async function findAll(): Promise<Employee[]>{
-    const result = await pool.query("SELECT * FROM employees;");
+export async function findAll(userId: number, role: UserRole): Promise<Employee[]>{
+    let query = "SELECT * FROM employees";
+    let values: number[] = [];
+    if (role != 'admin'){
+        query += "WHERE user_id = $1;";
+        values.push(userId);
+    }
+    const result = await pool.query(query, values);
     return result.rows;
 }
 

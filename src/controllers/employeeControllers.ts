@@ -7,7 +7,8 @@ export async function testServer(req: Request, res: Response){
 }
 
 export async function getAllEmployees(req: Request, res: Response){
-    const employees = await services.getAllEmployees();
+    const user = req.user!;
+    const employees = await services.getAllEmployees(user.userId, user.role);
     return res.status(200).json(employees);
 }
 

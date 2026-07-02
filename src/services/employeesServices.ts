@@ -4,11 +4,11 @@ import { CreateEmployeeInput, UpdateEmployeeInput, SearchEmployeesQuery } from "
 import { AppError } from "../errors/appError";
 import { UserRole } from "../types/userInterfaces";
 
-export async function getAllEmployees(){
-    return await repository.findAll();
+export async function getAllEmployees(userId: number, role: UserRole){
+    return await repository.findAll(userId, role);
 }
 
-export async function findEmployeeById(id: number, userId: number, role: UserRole): Promise<Employee>{
+export async function findEmployeeById(id: number, userId: number, role: UserRole): Promise<Employee | null>{
     const employee = await repository.findById(id, userId, role);
     if (!employee){
         throw new AppError("Employee not found", 404);
