@@ -61,7 +61,7 @@ export async function findAll(userId: number, role: UserRole): Promise<Employee[
     let query = "SELECT * FROM employees";
     let values: number[] = [];
     if (role != 'admin'){
-        query += "WHERE user_id = $1;";
+        query += " WHERE user_id = $1;";
         values.push(userId);
     }
     const result = await pool.query(query, values);
