@@ -86,6 +86,4 @@ describe('Employee Services', () => {
             .rejects.toThrow(new AppError('Employee not found', 404));
         });
     });
-
-    describe('')
 });

@@ -3,7 +3,6 @@ import * as authServices from '../../src/services/authServices';
 import * as repository from '../../src/repository/authRepository';
 import { AppError } from '../../src/errors/appError';
 import { comparePassword, hashPassword } from '../../src/utils/password';
-import { hash } from 'node:crypto';
 
 vi.mock('../../src/repository/authRepository');
 vi.mock('../../src/utils/password');
