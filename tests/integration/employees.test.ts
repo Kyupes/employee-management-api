@@ -1,6 +1,6 @@
 import { describe, it, expect, afterAll, beforeEach, beforeAll } from 'vitest';
 import request from 'supertest';
-import { clearDatabase, closeDatabase } from '../helpers/db';
+import { clearDatabase } from '../helpers/db';
 import { app } from '../../src/app';
 import { createEmployeesForUser, createTestUser } from '../helpers/auth';
 import { authenticatedRequest } from '../helpers/auth';
@@ -17,10 +17,6 @@ describe('Employees API', () => {
         testEmployeeMissing: { name: 'Robert Williams', role: 'Tech Lead', active: false},
         testEmployeeIncorrect: { name: 'Robert Williams', role: true, salary: '4000', active: 'false' },
     };
-
-    afterAll(async () => {
-        await closeDatabase();
-    });
 
     beforeEach(async () => {
         await clearDatabase();
