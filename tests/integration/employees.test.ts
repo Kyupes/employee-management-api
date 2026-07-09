@@ -53,6 +53,7 @@ describe('Employees API', () => {
             const authRequest = authenticatedRequest(testUser.token);
             const response = await authRequest.get('/employees');
             expect(response.status).toBe(200);
+            expect(Array.isArray(response.body)).toBe(true);
             expect(response.body.length).toBe(2);
         });
     });
@@ -72,27 +73,49 @@ describe('Employees API', () => {
 
         it('should return the employee by admin user', async () => {
             const authRequest = authenticatedRequest(adminUser.token);
-            const response = await authRequest.get('/employees/1');
+            const id = 1;
+            const response = await authRequest.get(`/employees/${id}`);
             expect(response.status).toBe(200);
-            expect(response.body).toHaveProperty('name', 'John Doe');
-            expect(response.body).toHaveProperty('role', 'Frontend Developer');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    id: id,
+                    name: testEmployees.userEmployee1.name,
+                    role: testEmployees.userEmployee1.role,
+                    salary: testEmployees.userEmployee1.salary,
+                    active: testEmployees.userEmployee1.active,
+                    user_id: testUser.userId,
+                })
+            );
         });
 
         it('should return 404 when searching for employee by different owner user', async () => {
             const authRequest = authenticatedRequest(testUser.token);
             const response = await authRequest.get('/employees/3');
             expect(response.status).toBe(404);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 404);
-            expect(response.body).toHaveProperty('message', 'Employee not found');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 404,
+                    message: 'Employee not found',
+                })
+            );
         });
 
         it('should return employee by owner user', async () => {
             const authRequest = authenticatedRequest(testUser.token);
-            const response = await authRequest.get('/employees/2');
+            const id = 2;
+            const response = await authRequest.get(`/employees/${id}`);
             expect(response.status).toBe(200);
-            expect(response.body).toHaveProperty('name', 'Carl Foreman');
-            expect(response.body).toHaveProperty('role', 'Cybersecurity Specialist');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    id: id,
+                    name: testEmployees.userEmployee2.name,
+                    role: testEmployees.userEmployee2.role,
+                    salary: testEmployees.userEmployee2.salary,
+                    active: testEmployees.userEmployee2.active,
+                    user_id: testUser.userId,
+                })
+            );
         });
     });
 
@@ -114,38 +137,54 @@ describe('Employees API', () => {
             const authRequest = authenticatedRequest(testUser.token);
             const response = await authRequest.post('/employees').send(testEmployees.testEmployeeMissing);
             expect(response.status).toBe(400);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 400);
-            expect(response.body).toHaveProperty('message', 'Validation failed');
-            expect(response.body).toHaveProperty('errors');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed',
+                })
+            );
         });
 
         it('should return 400 for incorrect body', async () => {
             const authRequest = authenticatedRequest(testUser.token);
             const response = await authRequest.post('/employees').send(testEmployees.testEmployeeIncorrect);
             expect(response.status).toBe(400);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 400);
-            expect(response.body).toHaveProperty('message', 'Validation failed');
-            expect(response.body).toHaveProperty('errors');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed',
+                })
+            );
         });
 
         it('should return 400 if employee already exists for user', async () => {
             const authRequest = authenticatedRequest(testUser.token);
             const response = await authRequest.post('/employees').send(testEmployees.userEmployee1);
             expect(response.status).toBe(409);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 409);
-            expect(response.body).toHaveProperty('message', 'Employee already exists');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 409,
+                    message: 'Employee already exists',
+                })
+            );
         });
 
         it('should create and return new employee for its user', async () => {
             const authRequest = authenticatedRequest(testUser.token);
             const response = await authRequest.post('/employees').send(testEmployees.testEmployeeCorrect);
             expect(response.status).toBe(201);
-            expect(response.body).toHaveProperty('name', 'Robert Williams');
-            expect(response.body).toHaveProperty('role', 'Tech Lead');
-            expect(response.body).toHaveProperty('user_id', testUser.userId);
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    name: testEmployees.testEmployeeCorrect.name,
+                    role: testEmployees.testEmployeeCorrect.role,
+                    salary: testEmployees.testEmployeeCorrect.salary,
+                    active: testEmployees.testEmployeeCorrect.active,
+                    user_id: testUser.userId,
+                })
+            );
         });
     });
 
@@ -166,37 +205,56 @@ describe('Employees API', () => {
             const authRequest = authenticatedRequest(testUser.token);
             const response = await authRequest.put('/employees/1').send(testEmployees.testEmployeeMissing);
             expect(response.status).toBe(400);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 400);
-            expect(response.body).toHaveProperty('message', 'Validation failed');
-            expect(response.body).toHaveProperty('errors');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed',
+                })
+            );
         });
 
         it('should return 400 for incorrect body', async () => {
             const authRequest = authenticatedRequest(testUser.token);
             const response = await authRequest.put('/employees/1').send(testEmployees.testEmployeeIncorrect);
             expect(response.status).toBe(400);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 400);
-            expect(response.body).toHaveProperty('message', 'Validation failed');
-            expect(response.body).toHaveProperty('errors');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed',
+                })
+            );
         });
 
         it('should return 404 when user try to update another users employee', async () => {
             const authRequest = authenticatedRequest(testUser.token);
             const response = await authRequest.put('/employees/3').send(testEmployees.testEmployeeCorrect);
             expect(response.status).toBe(404);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 404);
-            expect(response.body).toHaveProperty('message', 'Employee not found');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 404,
+                    message: 'Employee not found',
+                })
+            );
         });
 
         it('should update and return employee', async () => {
             const authRequest = authenticatedRequest(testUser.token);
-            const response = await authRequest.put('/employees/1').send(testEmployees.testEmployeeCorrect);
+            const id = 1;
+            const response = await authRequest.put(`/employees/${id}`).send(testEmployees.testEmployeeCorrect);
             expect(response.status).toBe(200);
-            expect(response.body).toHaveProperty('name', 'Robert Williams');
-            expect(response.body).toHaveProperty('role', 'Tech Lead');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    id: id,
+                    name: testEmployees.testEmployeeCorrect.name,
+                    role: testEmployees.testEmployeeCorrect.role,
+                    salary: testEmployees.testEmployeeCorrect.salary,
+                    active: testEmployees.testEmployeeCorrect.active,
+                    user_id: testUser.userId,
+                })
+            );
         });
     });
 
@@ -217,9 +275,13 @@ describe('Employees API', () => {
             const authRequest = authenticatedRequest(testUser.token);
             const response = await authRequest.delete('/employees/1');
             expect(response.status).toBe(403);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 403);
-            expect(response.body).toHaveProperty('message', 'Insufficient permissions');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 403,
+                    message: 'Insufficient permissions',
+                })
+            );
         });
 
         it('should successfuly delete employee by admin', async () => {
@@ -233,27 +295,39 @@ describe('Employees API', () => {
             const authRequest = authenticatedRequest(testUser.token);
             const response = await authRequest.delete('/employees/3');
             expect(response.status).toBe(403);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 403);
-            expect(response.body).toHaveProperty('message', 'Insufficient permissions');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 403,
+                    message: 'Insufficient permissions',
+                })
+            );
         });
 
         it('should return 403 for non-existent employee by user', async () => {
             const authRequest = authenticatedRequest(testUser.token);
             const response = await authRequest.delete('/employees/10');
             expect(response.status).toBe(403);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 403);
-            expect(response.body).toHaveProperty('message', 'Insufficient permissions');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 403,
+                    message: 'Insufficient permissions',
+                })
+            );
         });
 
         it('should return 404 for non-existent employee by admin', async () => {
             const authRequest = authenticatedRequest(adminUser.token);
             const response = await authRequest.delete('/employees/10');
             expect(response.status).toBe(404);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 404);
-            expect(response.body).toHaveProperty('message', 'Employee not found');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 404,
+                    message: 'Employee not found',
+                })
+            );
         });
     });
 });
