@@ -32,9 +32,13 @@ describe('Employees API', () => {
         it('should return 401 without authentication', async () => {
             const response = await request(app).get('/employees');
             expect(response.status).toBe(401);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 401);
-            expect(response.body).toHaveProperty('message', 'Authentication required');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 401,
+                    message: 'Authentication required',
+                })
+            );
         });
 
         it('should return all employees for admin', async () => {
@@ -57,9 +61,13 @@ describe('Employees API', () => {
         it('should return 401 without authentication', async () => {
             const response = await request(app).get('/employees/1');
             expect(response.status).toBe(401);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 401);
-            expect(response.body).toHaveProperty('message', 'Authentication required');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 401,
+                    message: 'Authentication required',
+                })
+            );
         });
 
         it('should return the employee by admin user', async () => {
@@ -93,9 +101,13 @@ describe('Employees API', () => {
             const response = await request(app).post('/employees')
             .send(testEmployees.testEmployeeCorrect);
             expect(response.status).toBe(401);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 401);
-            expect(response.body).toHaveProperty('message', 'Authentication required');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 401,
+                    message: 'Authentication required',
+                })
+            );
         });
 
         it('should return 400 for missing body', async () => {
@@ -141,9 +153,13 @@ describe('Employees API', () => {
         it('should return 401 without authentication', async () => {
             const response = await request(app).put('/employees/1').send(testEmployees.testEmployeeCorrect);
             expect(response.status).toBe(401);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 401);
-            expect(response.body).toHaveProperty('message', 'Authentication required');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 401,
+                    message: 'Authentication required',
+                })
+            );
         });
 
         it('should return 400 for missing body', async () => {
@@ -188,9 +204,13 @@ describe('Employees API', () => {
         it('should return 401 without authentication', async () => {
             const response = await request(app).delete('/employees/1');
             expect(response.status).toBe(401);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 401);
-            expect(response.body).toHaveProperty('message', 'Authentication required');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 401,
+                    message: 'Authentication required',
+                })
+            );
         });
 
         it('should return 403 for user not authorized', async () => {
