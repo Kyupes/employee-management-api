@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll, beforeEach, beforeAll } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import { clearDatabase } from '../helpers/db';
 import { app } from '../../src/app';
@@ -206,7 +206,7 @@ describe('Employees API', () => {
             const authRequest = authenticatedRequest(adminUser.token);
             const response = await authRequest.delete('/employees/1');
             expect(response.status).toBe(204);
-            expect(response.body).not.toHaveProperty('status');
+            expect(response).toHaveProperty('body', {});
         });
 
         it('should return 403 for unauthorized access by user', async () => {
