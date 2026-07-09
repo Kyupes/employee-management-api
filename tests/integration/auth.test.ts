@@ -17,8 +17,12 @@ describe('Auth API', () => {
         it('should register a new user', async () => {
             const response = await request(app).post('/auth/register').send(userData);
             expect(response.status).toBe(201);
-            expect(response.body).toHaveProperty('id');
-            expect(response.body).toHaveProperty('email', 'test@test.com');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    id: expect.any(Number),
+                    email: userData.email,
+                })
+            );
             expect(response.body).not.toHaveProperty('password_hash');
         });
 
@@ -28,9 +32,13 @@ describe('Auth API', () => {
                 password: userData.password
             });
             expect(response.status).toBe(400);
-            expect(response.body).toHaveProperty('status', 'Error');
-            expect(response.body).toHaveProperty('statusCode', 400);
-            expect(response.body).toHaveProperty('message', 'Validation failed');
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed',
+                })
+            );
         });
 
         it('should return 409 for duplicate email', async () => {
@@ -38,9 +46,13 @@ describe('Auth API', () => {
             expect(response.status).toBe(201);
             const response2 = await request(app).post('/auth/register').send(userData);
             expect(response2.status).toBe(409);
-            expect(response2.body).toHaveProperty('status', 'Error');
-            expect(response2.body).toHaveProperty('statusCode', 409);
-            expect(response2.body).toHaveProperty('message', 'Email already in use');
+            expect(response2.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 409,
+                    message: 'Email already in use',
+                })
+            );
         });
     });
 
@@ -50,9 +62,12 @@ describe('Auth API', () => {
             expect(registerResponse.status).toBe(201);
             const loginResponse = await request(app).post('/auth/login').send(userData);
             expect(loginResponse.status).toBe(200);
-            expect(loginResponse.body).toHaveProperty('token');
-            expect(loginResponse.body.token).toMatch(/^eyJ/);
-            expect(loginResponse.body.user).toHaveProperty('email', 'test@test.com');
+            expect(loginResponse.body).toEqual(
+                expect.objectContaining({
+                    token: expect.stringMatching(/^eyJ/),
+                    user: expect.objectContaining({ email: userData.email }),
+                })
+            );
             expect(loginResponse.body.user).not.toHaveProperty('password_hash');
         });
 
@@ -64,9 +79,13 @@ describe('Auth API', () => {
                 password: 'WrongPass123' 
             });
             expect(loginResponse.status).toBe(401);
-            expect(loginResponse.body).toHaveProperty('status', 'Error');
-            expect(loginResponse.body).toHaveProperty('statusCode', 401);
-            expect(loginResponse.body).toHaveProperty('message', 'Invalid credentials');
+            expect(loginResponse.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 401,
+                    message: 'Invalid credentials'
+                })
+            );
         });
     });
 });
