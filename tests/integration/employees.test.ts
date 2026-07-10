@@ -4,6 +4,7 @@ import { clearDatabase } from '../helpers/db';
 import { app } from '../../src/app';
 import { createEmployeesForUser, createTestUser } from '../helpers/auth';
 import { authenticatedRequest } from '../helpers/auth';
+import { Employee } from '../../src/types/employeesInterfaces';
 
 describe('Employees API', () => {
     let testUser: { token: string; userId: number };
@@ -16,6 +17,32 @@ describe('Employees API', () => {
         testEmployeeCorrect: { name: 'Robert Williams', role: 'Tech Lead', salary: 6000, active: true },
         testEmployeeMissing: { name: 'Robert Williams', role: 'Tech Lead', active: false},
         testEmployeeIncorrect: { name: 'Robert Williams', role: true, salary: '4000', active: 'false' },
+    };
+    const userEmployeesStats = {
+        totalEmployees: 2,
+        activeEmployees: 2,
+        inactiveEmployees: 0,
+        averageSalary: 5000,
+        highestSalary: 6000,
+        lowestSalary: 4000,
+        roles: { 
+            'Frontend Developer': 1, 
+            'Cybersecurity Specialist': 1
+        },
+    };
+    const allEmployeesStats = {
+        totalEmployees: 4,
+        activeEmployees: 4,
+        inactiveEmployees: 0,
+        averageSalary: 4900,
+        highestSalary: 6000,
+        lowestSalary: 4000,
+        roles: { 
+            'Frontend Developer': 1, 
+            'Cybersecurity Specialist': 1, 
+            'Backend Developer': 1,
+            'Fullstack Developer': 1,
+        },
     };
 
     beforeEach(async () => {
@@ -328,6 +355,34 @@ describe('Employees API', () => {
                     message: 'Employee not found',
                 })
             );
+        });
+    });
+
+    describe('GET /employees/stats', () => {
+        it('should return 401 without authentication', async () => {
+            const response = await request(app).get('/employees/stats');
+            expect(response.status).toBe(401);
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 401,
+                    message: 'Authentication required',
+                })
+            );
+        });
+
+        it('should return employees stats for user owner', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/stats');
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual(userEmployeesStats);
+        });
+
+        it('should return all employees stats for admin', async () => {
+            const authRequest = authenticatedRequest(adminUser.token);
+            const response = await authRequest.get('/employees/stats');
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual(allEmployeesStats);
         });
     });
 });
