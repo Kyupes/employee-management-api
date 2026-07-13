@@ -5,13 +5,14 @@ import { app } from '../../src/app';
 import { createEmployeesForUser, createTestUser } from '../helpers/auth';
 import { authenticatedRequest } from '../helpers/auth';
 import { Employee } from '../../src/types/employeesInterfaces';
+import { object } from 'zod';
 
 describe('Employees API', () => {
     let testUser: { token: string; userId: number };
     let adminUser: { token: string; userId: number };
     const testEmployees = {
         userEmployee1: { name: 'John Doe', role: 'Frontend Developer', salary: 4000, active: true },
-        userEmployee2: { name: 'Carl Foreman', role: 'Cybersecurity Specialist', salary: 6000, active: true },
+        userEmployee2: { name: 'Carl Foreman', role: 'Cybersecurity Specialist', salary: 6000, active: false },
         adminEmployee1: { name: 'Sarah Smith', role: 'Backend Developer', salary: 5000, active: true },
         adminEmployee2: { name: 'Pietra Johnson', role: 'Fullstack Developer', salary: 4600, active: true },
         testEmployeeCorrect: { name: 'Robert Williams', role: 'Tech Lead', salary: 6000, active: true },
@@ -20,8 +21,8 @@ describe('Employees API', () => {
     };
     const userEmployeesStats = {
         totalEmployees: 2,
-        activeEmployees: 2,
-        inactiveEmployees: 0,
+        activeEmployees: 1,
+        inactiveEmployees: 1,
         averageSalary: 5000,
         highestSalary: 6000,
         lowestSalary: 4000,
@@ -32,8 +33,8 @@ describe('Employees API', () => {
     };
     const allEmployeesStats = {
         totalEmployees: 4,
-        activeEmployees: 4,
-        inactiveEmployees: 0,
+        activeEmployees: 3,
+        inactiveEmployees: 1,
         averageSalary: 4900,
         highestSalary: 6000,
         lowestSalary: 4000,
@@ -384,5 +385,251 @@ describe('Employees API', () => {
             expect(response.status).toBe(200);
             expect(response.body).toEqual(allEmployeesStats);
         });
+    });
+
+    describe('GET /employees/search', () => {
+        it('should return 401 without authentication', async () => {
+            const response = await request(app).get('/employees/search');
+            expect(response.status).toBe(401);
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 401,
+                    message: 'Authentication required',
+                })
+            );
+        });
+
+        it('should return only its owner employees', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search');
+            expect(response.status).toBe(200);
+            expect(Array.isArray(response.body)).toBe(true);
+            expect(response.body.length).toBe(2);
+            expect(response.body).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining(testEmployees.userEmployee1),
+                    expect.objectContaining(testEmployees.userEmployee2),
+                ])
+            );
+        });
+
+        it('should return employees above 5000 salary', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search?minSalary=5000');
+            expect(response.status).toBe(200);
+            expect(Array.isArray(response.body)).toBe(true);
+            expect(response.body.every(
+                (employee: Employee) => employee.salary >= 5000
+            )).toBe(true);
+        });
+
+        it('should return empty array when no employee satifies search', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search?minSalary=99999');
+            expect(response.status).toBe(200);
+            expect(Array.isArray(response.body)).toBe(true);
+            expect(response.body).toEqual([]);
+        });
+
+        it('should return 400 when invalid salary is provided', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search?minSalary=abc');
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed',
+                })
+            );
+        });
+
+        it('should return 400 when negative salary is provided', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search?minSalary=-100');
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed',
+                })
+            );
+        });
+
+        it('should filter employees by role', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search?role=dev');
+            expect(response.status).toBe(200);
+            expect(response.body.every(
+                (employee: Employee) => employee.role.includes('dev')
+            ))
+        });
+
+        it('should filter employees by name', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search?name=John');
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual(
+                expect.arrayContaining([expect.objectContaining(testEmployees.userEmployee1)])
+            );
+        });
+
+        it('should return 200 even when filtering unmatching role/name', async () =>{
+            const authRequest = authenticatedRequest(testUser.token);
+            const response1 = await authRequest.get('/employees/search?role=i_dont_exist');
+            expect(response1.status).toBe(200);
+            expect(response1.body).toEqual([]);
+            const response2 = await authRequest.get('/employees/search?name=i_dont_exist');
+            expect(response2.status).toBe(200);
+            expect(response2.body).toEqual([]);
+        });
+
+        it('should filter employees by activity', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response1 = await authRequest.get('/employees/search?active=true');
+            expect(response1.status).toBe(200);
+            expect(response1.body.every(
+                (employee: Employee) => employee.active
+            ));
+            const response2 = await authRequest.get('/employees/search?active=false');
+            expect(response2.status).toBe(200);
+            expect(response2.body.every(
+                (employee: Employee) => !employee.active
+            ));
+        });
+
+        it('should return 400 for invalid boolean', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search?active=yes');
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed'
+                })
+            );
+        });
+
+        it('should return 3 employees when using limit(3) in first page and 1 in second page', async () => {
+            const authRequest = authenticatedRequest(adminUser.token);
+            const response1 = await authRequest.get('/employees/search?limit=3&page=1');
+            expect(response1.status).toBe(200);
+            expect(Array.isArray(response1.body)).toBe(true);
+            expect(response1.body.length).toBe(3);
+            const response2 = await authRequest.get('/employees/search?limit=3&page=2');
+            expect(response2.status).toBe(200);
+            expect(Array.isArray(response2.body)).toBe(true);
+            expect(response2.body.length).toBe(1);
+        });
+
+        it('should return 200 with empty array when pagination over number of employees', async () => {
+            const authRequest = authenticatedRequest(adminUser.token);
+            const response = await authRequest.get('/employees/search?page=10');
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual([]);
+        });
+
+        it('should return 400 when invalid page', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search?page=abc');
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed',
+                })
+            );
+        });
+
+        it('should return 400 when page equals to 0', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search?page=0');
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed',
+                })
+            );
+        });
+
+        it('should return 400 when page is negative', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search?page=-2');
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed',
+                })
+            );
+        });
+
+        it('should return 400 when invalid limit', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search?limit=abc');
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed',
+                })
+            );
+        });
+
+        it('should return 400 when limit is 0', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search?limit=0');
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed',
+                })
+            );
+        });
+
+        it('should return 400 when limit is negative', async () => {
+            const authRequest = authenticatedRequest(testUser.token);
+            const response = await authRequest.get('/employees/search?limit=-2');
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+                expect.objectContaining({
+                    status: 'Error',
+                    statusCode: 400,
+                    message: 'Validation failed',
+                })
+            );
+        });
+
+        it ('should combine multiple filters', async () => {
+            const authRequest = authenticatedRequest(adminUser.token);
+            const response1 = await authRequest.get('/employees/search?role=dev&active=true&minSalary=3500');
+            expect(response1.status).toBe(200);
+            expect(response1.body).toEqual(
+                expect.arrayContaining([expect.objectContaining(testEmployees.userEmployee1)]),
+            );
+            const response2 = await authRequest.get('/employees/search?active=false&minSalary=5000');
+            expect(response2.status).toBe(200);
+            expect(response2.body).toEqual(
+                expect.arrayContaining([expect.objectContaining(testEmployees.userEmployee2)]),
+            );
+            const response3 = await authRequest.get('/employees/search?role=dev&minSalary=4500');
+            expect(response3.status).toBe(200);
+            expect(response3.body).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining(testEmployees.adminEmployee1),
+                    expect.objectContaining(testEmployees.adminEmployee2),
+                ])
+            );
+       });
     });
 });
