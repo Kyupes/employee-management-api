@@ -24,9 +24,17 @@ export type EmployeeIdParams = z.infer<typeof employeeIdParamSchema>;
 export const searchEmployeesQuerySchema = z.object({
     name: z.string().optional(),
     role: z.string().optional(),
-    minSalary: z.coerce.number().positive("Salary must be positive").optional(),
-    active: z.string().transform(val => val.toLowerCase() === 'true').optional(),
-    page: z.coerce.number().min(1).default(1),
-    limit: z.coerce.number().min(1).default(10)
+    minSalary: z.coerce.number().nonnegative().optional(),
+    active: z.string()
+    .refine(value => 
+        value.toLowerCase() === 'true' || 
+        value.toLowerCase() === 'false',
+        {
+            message: "Active must be 'true' or 'false'",
+        }
+    )
+    .transform(val => val.toLowerCase() === 'true').optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(10)
 }).strict();
 export type SearchEmployeesQuery = z.infer<typeof searchEmployeesQuerySchema>;
