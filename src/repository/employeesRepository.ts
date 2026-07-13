@@ -18,11 +18,11 @@ export async function searchAndPaginate(filters: SearchEmployeesQuery, userId: n
     const values: (string | number | boolean)[] = [];
     const conditions: string[] = ["1=1"];
     if (filters.name) {
-        values.push(filters.name);
+        values.push(`%${filters.name}%`);
         conditions.push(`name ILIKE $${values.length}`);
     }
     if (filters.role){
-        values.push(filters.role);
+        values.push(`%${filters.role}%`);
         conditions.push(`role ILIKE $${values.length}`);
     }
     if (filters.minSalary){
