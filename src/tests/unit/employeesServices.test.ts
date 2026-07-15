@@ -3,7 +3,7 @@ import * as services from '../../services/employeesServices';
 import * as repository from '../../repository/employeesRepository';
 import { AppError } from '../../errors/appError';
 
-vi.mock('../../src/repository/employeesRepository');
+vi.mock('../../repository/employeesRepository');
 
 describe('Employee Services', () => {
     beforeEach(() => {

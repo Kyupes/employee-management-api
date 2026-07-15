@@ -5,8 +5,8 @@ import { AppError } from '../../errors/appError';
 import { comparePassword, hashPassword } from '../../utils/password';
 import { UserRole } from '../../types/userInterfaces';
 
-vi.mock('../../src/repository/authRepository');
-vi.mock('../../src/utils/password');
+vi.mock('../../repository/authRepository');
+vi.mock('../../utils/password');
 
 describe('authServices', () => {
     beforeEach(() => {
