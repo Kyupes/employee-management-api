@@ -1,4 +1,4 @@
-import { pool } from '../../src/config/db';
+import { pool } from '../../config/db';
 
 export async function clearDatabase() {
     await pool.query('TRUNCATE TABLE employees, users RESTART IDENTITY CASCADE;');

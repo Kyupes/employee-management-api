@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import { clearDatabase } from '../helpers/db';
-import { app } from '../../src/app';
+import { app } from '../../app';
 import { createEmployeesForUser, createTestUser, authenticatedRequest } from '../helpers/auth';
-import { Employee } from '../../src/types/employeesInterfaces';
+import { Employee } from '../../types/employeesInterfaces';
 
 describe('Employees API', () => {
     let testUser: { token: string; userId: number };

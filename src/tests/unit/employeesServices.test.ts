@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as services from '../../src/services/employeesServices';
-import * as repository from '../../src/repository/employeesRepository';
-import { AppError } from '../../src/errors/appError';
+import * as services from '../../services/employeesServices';
+import * as repository from '../../repository/employeesRepository';
+import { AppError } from '../../errors/appError';
 
 vi.mock('../../src/repository/employeesRepository');
 

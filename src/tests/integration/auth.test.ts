@@ -1,7 +1,7 @@
 import { describe, it, expect, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import { clearDatabase } from '../helpers/db';
-import { app } from '../../src/app';
+import { app } from '../../app';
 
 describe('Auth API', () => {
     beforeEach(async () => {

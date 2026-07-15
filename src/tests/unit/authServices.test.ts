@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import * as authServices from '../../src/services/authServices';
-import * as repository from '../../src/repository/authRepository';
-import { AppError } from '../../src/errors/appError';
-import { comparePassword, hashPassword } from '../../src/utils/password';
-import { UserRole } from '../../src/types/userInterfaces';
+import * as authServices from '../../services/authServices';
+import * as repository from '../../repository/authRepository';
+import { AppError } from '../../errors/appError';
+import { comparePassword, hashPassword } from '../../utils/password';
+import { UserRole } from '../../types/userInterfaces';
 
 vi.mock('../../src/repository/authRepository');
 vi.mock('../../src/utils/password');
