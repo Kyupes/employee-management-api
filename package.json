@@ -29,6 +29,7 @@
     "migrate:make": "npx node-pg-migrate create",
     "migrate:up": "npx node-pg-migrate up",
     "migrate:down": "npx node-pg-migrate down",
-    "migrate:redo": "npx node-pg-migrate redo"
+    "migrate:redo": "npx node-pg-migrate redo",
+    "db:seed": "node seeds/seed.js"
   }
 }
