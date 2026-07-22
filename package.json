@@ -25,6 +25,10 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "migrate:make": "npx node-pg-migrate create",
+    "migrate:up": "npx node-pg-migrate up",
+    "migrate:down": "npx node-pg-migrate down",
+    "migrate:redo": "npx node-pg-migrate redo"
   }
 }
