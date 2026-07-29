@@ -40,5 +40,13 @@ registry.registerPath({
                 },
             },
         },
+        409: {
+            description: 'Employee with exact same name already exists',
+            content: {
+                'application/json': {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
     },
 });
