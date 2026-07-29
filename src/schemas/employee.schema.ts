@@ -51,20 +51,28 @@ export const employeeIdParamSchema = z.object({
 });
 export type EmployeeIdParams = z.infer<typeof employeeIdParamSchema>;
 
-export const searchEmployeesQuerySchema = z.object({
-    name: z.string().optional(),
-    role: z.string().optional(),
-    minSalary: z.coerce.number().nonnegative().optional(),
-    active: z.string()
-    .refine(value => 
-        value.toLowerCase() === 'true' || 
-        value.toLowerCase() === 'false',
-        {
-            message: "Active must be 'true' or 'false'",
-        }
-    )
-    .transform(val => val.toLowerCase() === 'true').optional(),
-    page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(100).default(10)
+export const paginationSchema = z.object({
+    page: z.coerce.number().int().min(1).default(1).openapi({
+        description: 'Number to specify page',
+        example: 2,
+    }),
+    limit: z.coerce.number().int().min(1).max(100).default(10).openapi({
+        description: 'Number to limit for results amount',
+        example: 50,
+    }),
+})
+
+export const searchEmployeesQuerySchema = paginationSchema.extend({
+    name: baseEmployeeSchema.shape.name.optional(),
+    role: baseEmployeeSchema.shape.role.optional(),
+    minSalary: z.coerce.number().nonnegative().optional().openapi({
+        description: 'Positive salary string coercion for searching',
+        example: '3500',
+    }),
+    active: z.enum(['true', 'false']).transform(value => value === 'true')
+    .optional().openapi({
+        description: 'Employee activity coercion for searching',
+        example: 'true',
+    }),
 }).strict();
 export type SearchEmployeesQuery = z.infer<typeof searchEmployeesQuerySchema>;
