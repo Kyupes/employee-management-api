@@ -1,6 +1,7 @@
 import { registry } from './openapi.registry';
-import { createEmployeeSchema, employeeResponseSchema } from '../schemas/employee.schema';
+import { createEmployeeSchema, employeeResponseSchema, updateEmployeeSchema, paginationSchema } from '../schemas/employee.schema';
 import { errorResponseSchema } from '../schemas/error.schema';
+import { number } from 'zod';
 
 registry.registerPath({
     method: 'post',
@@ -55,6 +56,9 @@ registry.registerPath({
     method: 'get',
     path: '/employees',
     summary: 'Get all employees',
+    request: {
+        query: paginationSchema,
+    },
     responses: {
         200: {
             description: 'Successfuly returns array of employees',
