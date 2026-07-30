@@ -136,3 +136,41 @@ registry.registerPath({
         },
     },
 });
+
+registry.registerPath({
+    method: 'delete',
+    path: '/employees/{id}',
+    summary: 'Delete an employee',
+    request: {
+        params: employeeIdParamSchema,
+    },
+    responses: {
+        204: {
+            description: 'Successfully deletes the employee',
+        },
+        400:{
+            description: 'Validation error or malformed request',
+            content: {
+                'application/json': {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: 'Unauthorized: Missing or invalid JWT',
+            content: {
+                'application/json': {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        404: {
+            description: 'Employee was not found',
+            content: {
+                'application/json': {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+    },
+});
