@@ -1,11 +1,11 @@
 import * as repository from "../repository/employeesRepository";
 import { Employee, Stats, GeneralStats, RoleCount, RoleCountRow } from "../types/employeesInterfaces";
-import { CreateEmployeeInput, UpdateEmployeeInput, SearchEmployeesQuery } from "../schemas/employee.schema";
+import { CreateEmployeeInput, UpdateEmployeeInput, SearchEmployeesQuery, PaginationQuery } from "../schemas/employee.schema";
 import { AppError } from "../errors/appError";
 import { UserRole } from "../types/userInterfaces";
 
-export async function getAllEmployees(userId: number, role: UserRole){
-    return await repository.findAll(userId, role);
+export async function getAllEmployees(pagination: PaginationQuery, userId: number, role: UserRole){
+    return await repository.findAll(pagination, userId, role);
 }
 
 export async function findEmployeeById(id: number, userId: number, role: UserRole): Promise<Employee | null>{

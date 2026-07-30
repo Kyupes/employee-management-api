@@ -60,7 +60,8 @@ export const paginationSchema = z.object({
         description: 'Number to limit for results amount',
         example: 50,
     }),
-})
+});
+export type PaginationQuery = z.infer<typeof paginationSchema>;
 
 export const searchEmployeesQuerySchema = paginationSchema.extend({
     name: baseEmployeeSchema.shape.name.optional(),

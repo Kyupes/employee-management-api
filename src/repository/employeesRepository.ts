@@ -1,7 +1,8 @@
 import type { Employee, GeneralStats, RoleCountRow } from "../types/employeesInterfaces";
 import { pool } from "../config/db";
-import { CreateEmployeeInput, SearchEmployeesQuery, UpdateEmployeeInput } from "../schemas/employee.schema";
+import { CreateEmployeeInput, SearchEmployeesQuery, UpdateEmployeeInput, PaginationQuery } from "../schemas/employee.schema";
 import { UserRole } from "../types/userInterfaces";
+import { off } from "cluster";
 
 export async function findByName(name: string, userId: number, role: UserRole): Promise<Employee | null>{
     let query = "SELECT * FROM employees WHERE name ILIKE $1";
@@ -57,13 +58,18 @@ export async function findById(id: number, userId: number, role: UserRole): Prom
     return result.rows[0] || null;
 }
 
-export async function findAll(userId: number, role: UserRole): Promise<Employee[]>{
+export async function findAll(pagination: PaginationQuery, userId: number, role: UserRole): Promise<Employee[]>{
     let query = "SELECT * FROM employees";
     let values: number[] = [];
     if (role != 'admin'){
-        query += " WHERE user_id = $1;";
+        query += " WHERE user_id = $1";
         values.push(userId);
     }
+    const offset = (pagination.page - 1) * pagination.limit;
+    const limitIndex = values.length + 1;
+    const offsetIndex = values.length + 2;
+    values.push(pagination.limit, offset);
+    query += ` LIMIT $${limitIndex} OFFSET $${offsetIndex};`
     const result = await pool.query(query, values);
     return result.rows;
 }

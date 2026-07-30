@@ -1,14 +1,15 @@
 import * as services from "../services/employeesServices";
 import { Request, Response } from "express";
-import { CreateEmployeeInput, UpdateEmployeeInput, EmployeeIdParams, SearchEmployeesQuery } from "../schemas/employee.schema";
+import { CreateEmployeeInput, UpdateEmployeeInput, EmployeeIdParams, SearchEmployeesQuery, PaginationQuery } from "../schemas/employee.schema";
 
 export async function testServer(req: Request, res: Response){
     return res.send("Server working");
 }
 
 export async function getAllEmployees(req: Request, res: Response){
+    const paginationQuery = req.validated?.query as PaginationQuery;
     const user = req.user!;
-    const employees = await services.getAllEmployees(user.userId, user.role);
+    const employees = await services.getAllEmployees(paginationQuery, user.userId, user.role);
     return res.status(200).json(employees);
 }
 

@@ -8,7 +8,7 @@ import * as controllers from "../controllers/employeeControllers";
 const router = express.Router();
 
 router.get("/", controllers.testServer);
-router.get("/employees", authenticate, controllers.getAllEmployees);
+router.get("/employees", authenticate, validate(searchEmployeesQuerySchema, 'query'), controllers.getAllEmployees);
 router.get("/employees/search", authenticate, validate(searchEmployeesQuerySchema, 'query'), controllers.searchEmployees);
 router.get("/employees/stats", authenticate, controllers.getEmployeeStats);
 router.get("/employees/:id", authenticate, validate(employeeIdParamSchema, 'params'), controllers.getEmployeeById);
