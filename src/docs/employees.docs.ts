@@ -50,3 +50,35 @@ registry.registerPath({
         },
     },
 });
+
+registry.registerPath({
+    method: 'get',
+    path: '/employees',
+    summary: 'Get all employees',
+    responses: {
+        200: {
+            description: 'Successfuly returns array of employees',
+            content: {
+                'application/json': {
+                    schema: employeeResponseSchema.array(),
+                },
+            },
+        },
+        400:{
+            description: 'Validation error or malformed request',
+            content: {
+                'application/json': {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: 'Unauthorized: Missing or invalid JWT',
+            content: {
+                'application/json': {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+    },
+});
