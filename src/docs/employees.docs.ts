@@ -1,5 +1,5 @@
 import { registry } from './openapi.registry';
-import { createEmployeeSchema, employeeResponseSchema, updateEmployeeSchema, paginationSchema } from '../schemas/employee.schema';
+import { createEmployeeSchema, employeeResponseSchema, updateEmployeeSchema, paginationSchema, employeeIdParamSchema } from '../schemas/employee.schema';
 import { errorResponseSchema } from '../schemas/error.schema';
 import { number } from 'zod';
 
@@ -78,6 +78,56 @@ registry.registerPath({
         },
         401: {
             description: 'Unauthorized: Missing or invalid JWT',
+            content: {
+                'application/json': {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+    },
+});
+
+registry.registerPath({
+    method: 'put',
+    path: '/employees/{id}',
+    summary: 'Update an employee',
+    request: {
+        body: {
+            content: {
+                'application/json':{
+                    schema: updateEmployeeSchema,
+                },
+            },
+        },
+        params: employeeIdParamSchema,
+    },
+    responses: {
+        200: {
+            description: 'Successfully returns the updated employee',
+            content: {
+                'application/json': {
+                    schema: employeeResponseSchema,
+                },
+            },
+        },
+        400:{
+            description: 'Validation error or malformed request',
+            content: {
+                'application/json': {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        401: {
+            description: 'Unauthorized: Missing or invalid JWT',
+            content: {
+                'application/json': {
+                    schema: errorResponseSchema,
+                },
+            },
+        },
+        404: {
+            description: 'Employee was not found',
             content: {
                 'application/json': {
                     schema: errorResponseSchema,
