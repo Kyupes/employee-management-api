@@ -2,7 +2,6 @@ import type { Employee, GeneralStats, RoleCountRow } from "../types/employeesInt
 import { pool } from "../config/db";
 import { CreateEmployeeInput, SearchEmployeesQuery, UpdateEmployeeInput, PaginationQuery } from "../schemas/employee.schema";
 import { UserRole } from "../types/userInterfaces";
-import { off } from "cluster";
 
 export async function findByName(name: string, userId: number, role: UserRole): Promise<Employee | null>{
     let query = "SELECT * FROM employees WHERE name ILIKE $1";
