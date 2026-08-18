@@ -1,7 +1,6 @@
 import { registry } from './openapi.registry';
 import { createEmployeeSchema, employeeResponseSchema, updateEmployeeSchema, paginationSchema, employeeIdParamSchema } from '../schemas/employee.schema';
 import { errorResponseSchema } from '../schemas/error.schema';
-import { number } from 'zod';
 
 registry.registerPath({
     method: 'post',
