@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const envSchema = z.object({
+    PORT: z.coerce.number().int().positive(),
     DB_HOST: z.string(),
     DB_PORT: z.coerce.number().int().positive(),
     DB_USER: z.string(),
@@ -8,5 +9,6 @@ export const envSchema = z.object({
     DB_NAME: z.string(),
     JWT_SECRET: z.string().min(32),
     JWT_EXPIRES_IN: z.string().default('1h'),
-    SALT_ROUNDS: z.coerce.number().int().positive()
+    SALT_ROUNDS: z.coerce.number().int().positive(),
+    REDIS_URL: z.string()
 });
