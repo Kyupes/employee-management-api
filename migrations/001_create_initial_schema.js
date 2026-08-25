@@ -16,10 +16,10 @@ exports.up = (pgm) => {
         role: { type: 'VARCHAR(255)', notNull: true },
         salary: { type: 'INTEGER', notNull: true },
         active: { type: 'BOOLEAN', notNull: true },
-        userId: { type: 'INTEGER', notNull: true, references: 'users', onDelete: 'CASCADE' }
+        user_id: { type: 'INTEGER', notNull: true, references: 'users', onDelete: 'CASCADE' }
     });
 
-    pgm.createIndex('employees', 'userId');
+    pgm.createIndex('employees', 'user_id');
 };
 
 /** @param {import('node-pg-migrate').MigrationBuilder}

@@ -43,7 +43,7 @@ const seedDatabase = async () => {
 
 
         await pool.query(`
-            INSERT INTO employees (name, role, salary, active, "userId")
+            INSERT INTO employees (name, role, salary, active, "user_id")
             VALUES
             ('Alice Johnson', 'Backend Developer', 5200, true, $1),
             ('Bruno Silva', 'Frontend Developer', 4800, true, $1),
@@ -59,7 +59,7 @@ const seedDatabase = async () => {
         console.log('✅ Created sample employees for user with id:', userId1);
 
         await pool.query(`
-            INSERT INTO employees (name, role, salary, active, "userId")
+            INSERT INTO employees (name, role, salary, active, "user_id")
             VALUES
             ('Kevin Brown', 'Backend Developer', 5500, true, $1),
             ('Larissa Rocha', 'Business Analyst', 4900, true, $1),
@@ -75,7 +75,7 @@ const seedDatabase = async () => {
         console.log('✅ Created sample employees for user with id:', userId2);
 
         await pool.query(`
-            INSERT INTO employees (name, role, salary, active, "userId")
+            INSERT INTO employees (name, role, salary, active, "user_id")
             VALUES
             ('Vanessa Barbosa', 'Scrum Master', 7300, true, $1),
             ('William Turner', 'Cloud Engineer', 8700, true, $1),
