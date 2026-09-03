@@ -1,5 +1,4 @@
-import { redisClient } from "../config/redis";
-
+import { redisClient } from "../config/redisClient";
 
 export async function initializeVersion(key: string): Promise<void>{
     try {

@@ -1,4 +1,4 @@
-import { redisClient } from "../config/redis";
+import { redisClient } from "../config/redisClient";
 
 export async function get<T>(key: string): Promise<T | null>{
     try {
