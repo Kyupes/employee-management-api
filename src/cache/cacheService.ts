@@ -1,13 +1,13 @@
 import { redisClient } from "../config/redis";
 
-export async function get<T>(key: string): Promise<T | undefined>{
+export async function get<T>(key: string): Promise<T | null>{
     try {
         const value = await redisClient.get(key);
         if (value != null) {
             const result = JSON.parse(value);
             return result;
         }
-        return undefined;
+        return null;
     } catch (err) {
         if (err instanceof SyntaxError){
             console.error("JSON parsing failed:", err);
@@ -15,6 +15,7 @@ export async function get<T>(key: string): Promise<T | undefined>{
         else {
             console.error("Redis get error:", err);
         }
+        return null;
     }
 }
 
