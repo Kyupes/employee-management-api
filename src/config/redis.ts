@@ -1,16 +1,5 @@
-import { createClient } from "redis";
-import { env } from './env';
 import { initializeVersion } from "../cache/cacheVersionService";
-
-const redisUrl = env.REDIS_URL;
-export const redisClient = createClient({
-    url: redisUrl,
-    disableOfflineQueue: true,
-});
-
-redisClient.on('error', err => {
-    console.log('Redis Client Error:', err);
-});
+import { redisClient } from "./redisClient";
 
 export async function connectRedis(): Promise<void> {
     if (!redisClient.isOpen){
