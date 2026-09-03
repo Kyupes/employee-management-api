@@ -3,9 +3,23 @@ import { Employee, Stats, GeneralStats, RoleCount, RoleCountRow } from "../types
 import { CreateEmployeeInput, UpdateEmployeeInput, SearchEmployeesQuery, PaginationQuery } from "../schemas/employee.schema";
 import { AppError } from "../errors/appError";
 import { UserRole } from "../types/userInterfaces";
+import { get, set } from '../cache/cacheService';
 
-export async function getAllEmployees(pagination: PaginationQuery, userId: number, role: UserRole){
-    return await repository.findAll(pagination, userId, role);
+export async function getAllEmployees(pagination: PaginationQuery, userId: number, role: UserRole): Promise<Employee[]>{
+    const versionKey = "employees:list:version";
+    const ttl = 300;
+    let currVersion: number | null = await get(versionKey);
+    if (currVersion === null){
+        return repository.findAll(pagination, userId, role);
+    }
+    const key = `employees:list:v${currVersion}:page:${pagination.page}:limit:${pagination.limit}:userId:${userId}:role:${role}`;
+    const cacheResult: Employee[] | null = await get(key);
+    if (cacheResult !== null){
+        return cacheResult;
+    }
+    const repoResult = await repository.findAll(pagination, userId, role);
+    set(key, repoResult, ttl);
+    return repoResult;
 }
 
 export async function findEmployeeById(id: number, userId: number, role: UserRole): Promise<Employee | null>{
