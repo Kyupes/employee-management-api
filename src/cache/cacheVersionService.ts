@@ -31,7 +31,7 @@ export async function getVersion(key: string): Promise<VersionResult>{
 
 export async function initializeVersion(key: string): Promise<void>{
     try {
-        await redisClient.setNX(key, '1');
+        await redisClient.set(key, '1', { NX: true });
     } catch (err) {
         console.error("Redis version initialization error:", err);
     }
