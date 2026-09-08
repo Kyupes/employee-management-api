@@ -63,6 +63,8 @@ export async function createEmployee(data: CreateEmployeeInput, userId: number, 
         throw new AppError("Employee already exists", 409);
     }
     const employee = await repository.create(data, userId);
+    const listVersionKey = `employees:list:version`;
+    await incrementVersion(listVersionKey);
     return employee;
 }
 
