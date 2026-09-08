@@ -19,7 +19,7 @@ export async function getVersion(key: string): Promise<VersionResult>{
             return { status: "missing" };
         }
         const versionNumber = Number(version);
-        if ( Number.isNaN(versionNumber) || versionNumber <= 0 ){
+        if ( !Number.isInteger(versionNumber) || versionNumber <= 0 ){
             return { status: "error" };
         }
         return { status: "found", version: versionNumber };
