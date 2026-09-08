@@ -3,7 +3,8 @@ import { Employee, Stats, GeneralStats, RoleCount, RoleCountRow } from "../types
 import { CreateEmployeeInput, UpdateEmployeeInput, SearchEmployeesQuery, PaginationQuery } from "../schemas/employee.schema";
 import { AppError } from "../errors/appError";
 import { UserRole } from "../types/userInterfaces";
-import { get, set } from '../cache/cacheService';
+import { get, set, remove } from '../cache/cacheService';
+import { initializeVersion, incrementVersion, VersionResult, getVersion, ensureVersion } from "../cache/cacheVersionService";
 
 export async function getAllEmployees(pagination: PaginationQuery, userId: number, role: UserRole): Promise<Employee[]>{
     const versionKey = "employees:list:version";
@@ -22,9 +23,35 @@ export async function getAllEmployees(pagination: PaginationQuery, userId: numbe
     return repoResult;
 }
 
-export async function findEmployeeById(id: number, userId: number, role: UserRole): Promise<Employee | null>{
-    const employee = await repository.findById(id, userId, role);
-    if (!employee){
+export async function findEmployeeById(id: number, userId: number, role: UserRole): Promise<Employee>{
+    const versionKey = `employees:details:id:${id}:version`;
+    const ttl = 300;
+    let version: VersionResult = await getVersion(versionKey);
+    let employee: Employee | null;
+    if (version.status === "error"){
+        employee = await repository.findById(id, userId, role);
+    } 
+    else if (version.status === "missing"){
+        employee = await repository.findById(id, userId, role);
+        if (employee !== null){
+            const ensuredVersion = await ensureVersion(versionKey);
+            if (ensuredVersion !== null){
+                const key = `employees:details:id:${id}:v${ensuredVersion}:userId:${userId}:role:${role}`;
+                set(key, employee, ttl);
+            }
+        }
+    } 
+    else {
+        const employeeKey = `employees:details:id:${id}:v${version.version}:userId:${userId}:role:${role}`;
+        employee = await get(employeeKey);
+        if (employee === null){
+            employee = await repository.findById(id, userId, role);
+            if (employee !== null){
+                set(employeeKey, employee, ttl);
+            }
+        }
+    }
+    if (employee === null){
         throw new AppError("Employee not found", 404);
     }
     return employee;
