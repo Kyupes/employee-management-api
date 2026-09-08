@@ -81,10 +81,16 @@ export async function updateEmployee(id: number, data: UpdateEmployeeInput, user
 }
 
 export async function deleteEmployeeById(id: number): Promise<void>{
-    const deleted = await repository.deleteById(Number(id));
+    const deleted = await repository.deleteById(id);
     if (!deleted){
         throw new AppError("Employee not found", 404);
     }
+    const detailsVersionKey = `employees:details:id:${id}:version`;
+    const listVersionKey = `employees:list:version`;
+    await Promise.all([
+        incrementVersion(detailsVersionKey), 
+        incrementVersion(listVersionKey)
+    ]);
 }
 
 export async function searchEmployees(query: SearchEmployeesQuery, userId: number, role: UserRole): Promise<Employee[]>{
