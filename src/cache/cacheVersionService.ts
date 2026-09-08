@@ -46,3 +46,18 @@ export async function incrementVersion(key: string): Promise<number | null>{
         return null;
     }
 }
+
+export async function ensureVersion(key: string): Promise<number | null>{
+    const version = await getVersion(key);
+    if (version.status === 'found'){
+        return version.version;
+    }
+    if (version.status === 'missing'){
+        await initializeVersion(key);
+        const initializedVersion = await getVersion(key);
+        if (initializedVersion.status === 'found'){
+            return initializedVersion.version;
+        }
+    }
+    return null;
+}
