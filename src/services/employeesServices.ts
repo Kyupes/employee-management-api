@@ -71,6 +71,12 @@ export async function updateEmployee(id: number, data: UpdateEmployeeInput, user
     if (!employee){
         throw new AppError("Employee not found", 404);
     }
+    const detailsVersionKey = `employees:details:id:${id}:version`;
+    const listVersionKey = `employees:list:version`;
+    await Promise.all([
+        incrementVersion(detailsVersionKey), 
+        incrementVersion(listVersionKey)
+    ]);
     return employee;
 }
 
