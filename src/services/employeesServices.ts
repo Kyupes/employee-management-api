@@ -26,31 +26,22 @@ export async function getAllEmployees(pagination: PaginationQuery, userId: numbe
 export async function findEmployeeById(id: number, userId: number, role: UserRole): Promise<Employee>{
     const versionKey = `employees:details:id:${id}:version`;
     const ttl = 300;
-    let version: VersionResult = await getVersion(versionKey);
+    const version: number | null = await ensureVersion(versionKey);
     let employee: Employee | null;
-    if (version.status === "error"){
+    if (version === null){
         employee = await repository.findById(id, userId, role);
-    } 
-    else if (version.status === "missing"){
+    } else {
+        const employeeKey = `employees:details:id:${id}:v${version}:userId:${userId}:role:${role}`;
+        employee = await get(employeeKey);
+        if (employee !== null){
+            return employee;
+        }
         employee = await repository.findById(id, userId, role);
         if (employee !== null){
-            const ensuredVersion = await ensureVersion(versionKey);
-            if (ensuredVersion !== null){
-                const key = `employees:details:id:${id}:v${ensuredVersion}:userId:${userId}:role:${role}`;
-                set(key, employee, ttl);
-            }
+            set(employeeKey, employee, ttl);
+            return employee;
         }
     } 
-    else {
-        const employeeKey = `employees:details:id:${id}:v${version.version}:userId:${userId}:role:${role}`;
-        employee = await get(employeeKey);
-        if (employee === null){
-            employee = await repository.findById(id, userId, role);
-            if (employee !== null){
-                set(employeeKey, employee, ttl);
-            }
-        }
-    }
     if (employee === null){
         throw new AppError("Employee not found", 404);
     }
