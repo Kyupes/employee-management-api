@@ -3,8 +3,8 @@ import { Employee, Stats, GeneralStats, RoleCount, RoleCountRow } from "../types
 import { CreateEmployeeInput, UpdateEmployeeInput, SearchEmployeesQuery, PaginationQuery } from "../schemas/employee.schema";
 import { AppError } from "../errors/appError";
 import { UserRole } from "../types/userInterfaces";
-import { get, set, remove } from '../cache/cacheService';
-import { initializeVersion, incrementVersion, VersionResult, getVersion, ensureVersion } from "../cache/cacheVersionService";
+import { get, set } from '../cache/cacheService';
+import { incrementVersion, ensureVersion } from "../cache/cacheVersionService";
 
 export async function getAllEmployees(pagination: PaginationQuery, userId: number, role: UserRole): Promise<Employee[]>{
     const versionKey = "employees:list:version";
