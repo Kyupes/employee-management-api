@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { redisClient } from '../../config/redisClient';
 import { getVersion, initializeVersion, incrementVersion, ensureVersion } from '../../cache/cacheVersionService';
-import { RedisClient } from 'redis';
 
 vi.mock('../../config/redisClient');
 
@@ -28,21 +27,17 @@ describe('Redis version cache', () => {
         });
 
         it('should return error when invalid version', async () =>{
-            vi.mocked(redisClient.get).mockRejectedValue('invalid version');
-            const consoleSpy = vi.spyOn(console, 'error');
+            vi.mocked(redisClient.get).mockResolvedValue('invalid version');
             const result = await getVersion(listVersionKey);
             expect(result).toStrictEqual({ status: 'error' });
             expect(redisClient.get).toHaveBeenCalledWith(listVersionKey);
-            expect(consoleSpy).toHaveBeenCalled;
         });
 
         it('should return error when invalid version', async () =>{
-            vi.mocked(redisClient.get).mockRejectedValue('5.873');
-            const consoleSpy = vi.spyOn(console, 'error');
+            vi.mocked(redisClient.get).mockResolvedValue('5.873');
             const result = await getVersion(listVersionKey);
             expect(result).toStrictEqual({ status: 'error' });
             expect(redisClient.get).toHaveBeenCalledWith(listVersionKey);
-            expect(consoleSpy).toHaveBeenCalled;
         });
 
         it('should return when redis failure', async () =>{
@@ -51,7 +46,7 @@ describe('Redis version cache', () => {
             const result = await getVersion(listVersionKey);
             expect(result).toStrictEqual({ status: 'error' });
             expect(redisClient.get).toHaveBeenCalledWith(listVersionKey);
-            expect(consoleSpy).toHaveBeenCalled;
+            expect(consoleSpy).toHaveBeenCalled();
         });
     });
 
@@ -60,13 +55,15 @@ describe('Redis version cache', () => {
             vi.mocked(redisClient.set).mockResolvedValue('OK');
             const consoleSpy = vi.spyOn(console, 'error');
             await initializeVersion(listVersionKey);
+            expect(redisClient.set).toHaveBeenCalledWith(listVersionKey, '1', { NX: true });
             expect(consoleSpy).not.toHaveBeenCalled();
         });
 
-        it('should not change when existent version', async () =>{ // not sure how to test properly
+        it('should not change when existent version', async () =>{
             vi.mocked(redisClient.set).mockResolvedValue(null);
             const consoleSpy = vi.spyOn(console, 'error');
             await initializeVersion(listVersionKey);
+            expect(redisClient.set).toHaveBeenCalledWith(listVersionKey, '1', { NX: true });
             expect(consoleSpy).not.toHaveBeenCalled();
         });
 
@@ -74,19 +71,71 @@ describe('Redis version cache', () => {
             vi.mocked(redisClient.set).mockRejectedValue(new Error);
             const consoleSpy = vi.spyOn(console, 'error');
             await initializeVersion(listVersionKey);
+            expect(redisClient.set).toHaveBeenCalledWith(listVersionKey, '1', { NX: true });
             expect(consoleSpy).toHaveBeenCalled();
         });
     });
 
     describe('incrementVersion', () => {
-        it('should ', async () =>{
+        it('should return incremented version', async () =>{
+            vi.mocked(redisClient.incr).mockResolvedValue(2);
+            const consoleSpy = vi.spyOn(console, 'error');
+            const result = await incrementVersion(listVersionKey);
+            expect(redisClient.incr).toHaveBeenCalledWith(listVersionKey);
+            expect(consoleSpy).not.toHaveBeenCalled();
+            expect(result).toStrictEqual(2);
+        });
 
+        it('should initialize version when non existent', async () =>{
+            vi.mocked(redisClient.incr).mockResolvedValue(1);
+            const result = await incrementVersion(listVersionKey);
+            expect(redisClient.incr).toHaveBeenCalledWith(listVersionKey);
+            expect(result).toStrictEqual(1);
+        });
+
+        it('should return null when failure', async () =>{
+            vi.mocked(redisClient.incr).mockRejectedValue(new Error);
+            const consoleSpy = vi.spyOn(console, 'error');
+            const result = await incrementVersion(listVersionKey);
+            expect(redisClient.incr).toHaveBeenCalledWith(listVersionKey);
+            expect(consoleSpy).toHaveBeenCalled();
+            expect(result).toStrictEqual(null);
         });
     });
 
     describe('ensureVersion', () => {
-        it('should ', async () =>{
+        it('should return valid version', async () =>{
+            vi.mocked(redisClient.get).mockResolvedValue('1');
+            const consoleSpy = vi.spyOn(console, 'error');
+            const result = await ensureVersion(listVersionKey);
+            expect(consoleSpy).not.toHaveBeenCalled();
+            expect(result).toStrictEqual(1);
+        });
 
+        it('should initialize a missing version', async () =>{
+            vi.mocked(redisClient.get)
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce('1');
+            vi.mocked(redisClient.set).mockResolvedValue('OK');
+            const consoleSpy = vi.spyOn(console, 'error');
+            const result = await ensureVersion(listVersionKey);
+            expect(redisClient.get).toHaveBeenCalledWith(listVersionKey);
+            expect(redisClient.set).toHaveBeenCalledWith(listVersionKey, '1', { NX: true });
+            expect(consoleSpy).not.toHaveBeenCalled();
+            expect(result).toStrictEqual(1);
+        });
+
+        it('should return null when fail to get and initialize version', async () =>{
+            vi.mocked(redisClient.get)
+            .mockResolvedValueOnce(null)
+            .mockRejectedValueOnce(new Error);
+            vi.mocked(redisClient.set).mockRejectedValue(new Error);
+            const consoleSpy = vi.spyOn(console, 'error');
+            const result = await ensureVersion(listVersionKey);
+            expect(redisClient.get).toHaveBeenCalledWith(listVersionKey);
+            expect(redisClient.set).toHaveBeenCalledWith(listVersionKey, '1', { NX: true });
+            expect(consoleSpy).toHaveBeenCalled();
+            expect(result).toStrictEqual(null);
         });
     });
 })
