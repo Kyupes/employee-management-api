@@ -3,11 +3,11 @@ export const openApiConfig = {
     info: {
         title: 'Employee Management API',
         version: '1.0.0',
-        description: `Production-grade API for managing employees. 
+        description: `A local learning project for managing employees with authentication, authorization, PostgreSQL, and Redis caching.
         ## Global Error Format
         All errors return a consistent JSON structure:
         \`\`\`json
-        { "status": "Error", "message": "STRING", "statusCode": "NUMBER", "errors": "OBJECT"}
+        { "status": "Error", "message": "STRING", "statusCode": 400, "errors": [] }
         \`\`\`
         `,
     },
