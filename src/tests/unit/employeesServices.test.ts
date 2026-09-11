@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as services from '../../services/employeesServices';
 import * as repository from '../../repository/employeesRepository';
 import { AppError } from '../../errors/appError';
-import { ensureVersion, incrementVersion } from '../../cache/cacheVersionService';
+import { ensureVersion, getVersion, incrementVersion } from '../../cache/cacheVersionService';
 import { get, set } from '../../cache/cacheService';
 
 vi.mock('../../repository/employeesRepository');
@@ -13,8 +13,8 @@ describe('Employee Services', () => {
     beforeEach(() => {
         vi.clearAllMocks()
     });
-
-    const employee = {
+    
+    const employee1 = {
         id: 1,
         name: 'Bruna',
         role: 'District Manager',
@@ -23,6 +23,24 @@ describe('Employee Services', () => {
         userId: 1
     };
 
+    const employee2 = {
+        id: 2,
+        name: 'Fabius',
+        role: 'QA Engineer',
+        salary: 7600,
+        active: true,
+        userId: 1
+    }
+
+    const employee3 = {
+        id: 3,
+        name: 'Megan',
+        role: 'Frontend Developer',
+        salary: 5400,
+        active: false,
+        userId: 1
+    }
+    
     const employeeInput = {
         name: 'Bruna',
         role: 'District Manager',
@@ -30,31 +48,33 @@ describe('Employee Services', () => {
         active: true
     };
 
+    const employees = [employee1, employee2, employee3];
+    
     describe('findEmployeeById', () => {
         it('should return a found employee in repository when cache missing', async () => {
             vi.mocked(ensureVersion).mockResolvedValue(null);
-            vi.mocked(repository.findById).mockResolvedValue(employee);
+            vi.mocked(repository.findById).mockResolvedValue(employee1);
             const result = await services.findEmployeeById(1, 1, 'user');
-            expect(result).toBe(employee);
+            expect(result).toBe(employee1);
         });
 
         it('should return a found employee in repository and set in cache', async () => {
             const cacheDetailsVersion = 1;
             vi.mocked(ensureVersion).mockResolvedValue(cacheDetailsVersion);
             vi.mocked(get).mockResolvedValue(null);
-            vi.mocked(repository.findById).mockResolvedValue(employee);
+            vi.mocked(repository.findById).mockResolvedValue(employee1);
             const result = await services.findEmployeeById(1, 1, 'user');
-            expect(result).toBe(employee);
-            const key = `employees:details:id:${employee.id}:v${cacheDetailsVersion}:userId:${employee.userId}:role:user`;
+            expect(result).toBe(employee1);
+            const key = `employees:details:id:${employee1.id}:v${cacheDetailsVersion}:userId:${employee1.userId}:role:user`;
             const ttl = 300;
-            expect(set).toHaveBeenCalledWith(key, employee, ttl);
+            expect(set).toHaveBeenCalledWith(key, employee1, ttl);
         });
 
         it('should return a found employee in cache', async () => {
             vi.mocked(ensureVersion).mockResolvedValue(1);
-            vi.mocked(get).mockResolvedValue(employee);
+            vi.mocked(get).mockResolvedValue(employee1);
             const result = await services.findEmployeeById(1, 1, 'user');
-            expect(result).toBe(employee);
+            expect(result).toBe(employee1);
             expect(repository.findById).not.toHaveBeenCalled();
         });
 
@@ -69,15 +89,15 @@ describe('Employee Services', () => {
 
     describe('createEmployee', () => {
         it('should create employee and invalidate list cache', async () => {
-            vi.mocked(repository.create).mockResolvedValue(employee);
+            vi.mocked(repository.create).mockResolvedValue(employee1);
             const result = await services.createEmployee(employeeInput, 1, 'user');
-            expect(result).toBe(employee);
+            expect(result).toBe(employee1);
             const versionKey = "employees:list:version";
             expect(incrementVersion).toHaveBeenCalledWith(versionKey);
         });
 
         it('should throw 409 if employee already exists', async () => {
-            vi.mocked(repository.findByName).mockResolvedValue(employee);
+            vi.mocked(repository.findByName).mockResolvedValue(employee1);
             await expect(services.createEmployee(employeeInput, 1, 'user')).rejects.toThrow();
             await expect(services.createEmployee(employeeInput, 1, 'user'))
             .rejects.toThrow(new AppError('Employee already exists', 409));
@@ -87,12 +107,12 @@ describe('Employee Services', () => {
 
     describe('updateEmployee', () => {
         it('should update the employee and invaldiate cache', async () => {
-            vi.mocked(repository.updateById).mockResolvedValue(employee);
+            vi.mocked(repository.updateById).mockResolvedValue(employee1);
             const result = await services.updateEmployee(1, employeeInput, 1, 'user');
-            expect(result).toBe(employee);
+            expect(result).toBe(employee1);
             const listVersionKey = "employees:list:version";
             expect(incrementVersion).toHaveBeenCalledWith(listVersionKey);
-            const detailsVersionKey = `employees:details:id:${employee.id}:version`;
+            const detailsVersionKey = `employees:details:id:${employee1.id}:version`;
             expect(incrementVersion).toHaveBeenCalledWith(detailsVersionKey);
         });
 
