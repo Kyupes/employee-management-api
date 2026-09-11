@@ -34,7 +34,7 @@ export const employeeResponseSchema = baseEmployeeSchema.extend({
         description: 'Unique identifier for employee',
         example: 48235,
     }),
-    userId: z.number().positive().openapi({
+    user_id: z.number().positive().openapi({
         description: 'Unique identifier for user owner',
         example: 732,
     }),

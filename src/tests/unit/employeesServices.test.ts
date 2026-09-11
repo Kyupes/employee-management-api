@@ -20,7 +20,7 @@ describe('Employee Services', () => {
         role: 'District Manager',
         salary: 6000,
         active: true,
-        userId: 1
+        user_id: 1
     };
 
     const employee2 = {
@@ -29,7 +29,7 @@ describe('Employee Services', () => {
         role: 'QA Engineer',
         salary: 7600,
         active: true,
-        userId: 1
+        user_id: 1
     }
 
     const employee3 = {
@@ -38,7 +38,7 @@ describe('Employee Services', () => {
         role: 'Frontend Developer',
         salary: 5400,
         active: false,
-        userId: 1
+        user_id: 1
     }
     
     const employeeInput = {
@@ -113,7 +113,7 @@ describe('Employee Services', () => {
             vi.mocked(repository.findById).mockResolvedValue(employee1);
             const result = await services.findEmployeeById(1, 1, 'user');
             expect(result).toBe(employee1);
-            const key = `employees:details:id:${employee1.id}:v${cacheDetailsVersion}:userId:${employee1.userId}:role:user`;
+            const key = `employees:details:id:${employee1.id}:v${cacheDetailsVersion}:userId:${employee1.user_id}:role:user`;
             const ttl = 300;
             expect(set).toHaveBeenCalledWith(key, employee1, ttl);
         });

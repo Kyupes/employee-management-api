@@ -4,7 +4,7 @@ export interface Employee {
     role: string;
     salary: number;
     active: boolean;
-    userId: number;
+    user_id: number;
 }
 
 export interface RoleCount {
