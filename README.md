@@ -1,211 +1,269 @@
 # Employee Management API
 
-A production-grade REST API built with Node.js, Express, TypeScript, and PostgreSQL.
+A REST API built with Node.js, Express, TypeScript, PostgreSQL, and Redis as part of a self-directed backend engineering roadmap.
 
-The project was created as part of a self-directed backend engineering study roadmap focused on building strong backend fundamentals through practical implementation and architectural understanding.
+The project focuses on backend fundamentals: HTTP APIs, layered architecture, authentication and authorization, relational data, validation, automated testing, caching, documentation, migrations, and containerization. It is a learning project intended to run locally rather than a service planned for public deployment.
 
-*Note: AI assistance was used strictly as a learning and mentoring tool for architectural reviews, concept explanations, and guidance. All application logic, architecture decisions, debugging, and implementation were developed manually.*
-
----
+> AI assistance was used as a mentoring tool for architectural reviews, concept explanations, and guidance. The application logic, implementation, debugging, and architectural decisions were developed manually.
 
 ## Features
 
-* **Core CRUD Operations:** Comprehensive employee management with dynamic SQL filtering and pagination.
-* **Advanced Database Operations:** SQL aggregation (COUNT, AVG, MIN, MAX, FILTER, GROUP BY) pushing computation to PostgreSQL.
-* **Security & Validation:** Parameterized queries (SQL injection prevention), runtime validation with Zod, and type coercion at the HTTP boundary.
-* **Authentication & Authorization:** Stateless JWT-based authentication and Role-Based Access Control (RBAC) with resource ownership checks.
-* **Automated Testing:** Unit tests (with service-layer mocking) and integration tests (with a real test database) using Vitest and Supertest.
-* **Containerization:** Fully Dockerized development and production environments using multi-stage builds for optimized image size and security.
-* **Layered Architecture:** Strict separation of concerns (Controllers → Services → Repositories) with centralized error handling.
+- Employee CRUD operations with ownership-aware access.
+- Search, filtering, and pagination using dynamic parameterized SQL.
+- PostgreSQL aggregations for employee and salary statistics.
+- JWT authentication with registration and login endpoints.
+- Role-based authorization, including admin-only deletion.
+- Runtime request and environment validation with Zod.
+- Centralized application errors and consistent JSON error responses.
+- Redis cache-aside reads for employee lists and individual employees.
+- Versioned cache invalidation after create, update, and delete operations.
+- Graceful PostgreSQL and Redis connection shutdown.
+- Version-controlled PostgreSQL migrations and database seeding.
+- OpenAPI generation from Zod schemas with Swagger UI in non-production environments.
+- Unit tests with mocked dependencies and integration tests against a real test database.
+- A multi-stage Docker image and Docker Compose stack for the API, PostgreSQL, and Redis.
 
----
+## Technology Stack
 
-## Tech Stack
-
-* **Runtime & Framework:** Node.js, Express
-* **Language:** TypeScript
-* **Database:** PostgreSQL, `node-postgres` (`pg`)
-* **Validation:** Zod
-* **Testing:** Vitest, Supertest
-* **Security:** `bcrypt`, `jsonwebtoken`
-* **DevOps:** Docker, Docker Compose
-
----
+- **Runtime:** Node.js 22 in Docker
+- **Framework:** Express 5
+- **Language:** TypeScript
+- **Database:** PostgreSQL 16 and `node-postgres`
+- **Cache:** Redis and `node-redis`
+- **Validation:** Zod
+- **Authentication:** JSON Web Tokens and bcrypt
+- **Database migrations:** node-pg-migrate
+- **API documentation:** OpenAPI, zod-to-openapi, and Swagger UI
+- **Testing:** Vitest and Supertest
+- **Containerization:** Docker and Docker Compose
 
 ## Architecture
 
 ```text
-HTTP Request
+HTTP request
     ↓
-Validation Middleware (Zod)
+Authentication / authorization
     ↓
-Controllers (HTTP layer, request/response handling)
+Zod validation middleware
     ↓
-Services (Business logic)
+Controllers
     ↓
-Repositories (Data access, SQL execution)
+Services ─────────── Redis cache
+    ↓
+Repositories
     ↓
 PostgreSQL
+
+Errors from the request pipeline
     ↓
-Global Error Handler
+Global error handler
 ```
 
-### Layer Responsibilities
+### Layer responsibilities
 
-* **Validation Middleware:** Validates and sanitizes HTTP input using Zod schemas. Coerces types (e.g., string to number for query params) and strips unknown fields.
-* **Controllers:** Handle HTTP-specific concerns (extracting validated data, setting status codes, sending responses). No business logic.
-* **Services:** Contain business logic and orchestrate operations. Trust that data passed from controllers is already validated.
-* **Repositories:** Own all database concerns. Execute SQL queries and return data. No business logic.
-* **Global Error Handler:** Catches all errors thrown anywhere in the application and formats consistent JSON error responses.
+- **Middleware:** Authenticates users, enforces roles, validates request input, and attaches validated data to the request.
+- **Controllers:** Translate HTTP requests into service calls and return the appropriate status codes and response bodies.
+- **Services:** Apply business rules, coordinate repositories, and manage cache-aside reads and invalidation.
+- **Repositories:** Own SQL queries and PostgreSQL access without containing HTTP concerns.
+- **Cache services:** Serialize cached values, manage version metadata, and degrade to PostgreSQL when Redis is unavailable.
+- **Global error handler:** Converts application and validation errors into consistent JSON responses.
 
----
+## Authentication and authorization
 
-## Validation & Error Handling
+Registering or logging in returns the data required to authenticate protected requests. Send the JWT using the `Authorization` header:
 
-### Runtime Validation 
-
-All HTTP input is validated using Zod schemas before reaching the controller:
-
-```typescript
-// Example schema
-export const createEmployeeSchema = z.object({
-    name: z.string().min(2).max(100),
-    role: z.string().min(1),
-    salary: z.number().min(1000),
-    active: z.boolean(),
-});
+```http
+Authorization: Bearer <token>
 ```
 
-### Validation Middleware
+Regular users can access only their own employee records. Administrators can access records across users, and employee deletion is restricted to administrators.
 
-The validation middleware intercepts requests, validates the specified part (body, params or query), and attaches validated data to req.validated:
+## Caching strategy
 
-```typescript
-router.post("/employees", validate(createEmployeeSchema, 'body'), controllers.createEmployee);
-```
+Employee list and detail reads use Redis as an optional cache. PostgreSQL remains the source of truth.
 
-### Centralized Error Handling
+Cached values use a five-minute TTL and versioned namespaces. The keys include the authorization scope (`userId` and role) so a cached response cannot cross ownership or role boundaries.
 
-Custom error classes extend the native Error class and include HTTP status codes. The global error handler catches all errors and returns consisten JSON responses:
+Mutation invalidation follows this model:
 
-```json
-{
-    "status": "Error",
-    "statusCode": 400,
-    "message": "Validation failed",
-    "errors": [
-        { "field": "salary", "message": "Number must be greater than or equal to 1000" }
-    ]
-}
-```
+| Mutation | List version | Detail version |
+| --- | --- | --- |
+| Create employee | Incremented | Not applicable for a new ID |
+| Update employee | Incremented | Incremented for that employee |
+| Delete employee | Incremented | Incremented for that employee |
 
----
+Old versioned values are not deleted immediately. They become unreachable and expire naturally through their TTL. Redis errors are logged and treated as cache misses so database-backed operations can continue.
 
-## Database Optimization
-
-### Dynamic SQL Filtering
-
-The search endpoint builds SQL queries dynamically based on provided filters, using parameterized queries to prevent SQL injection:
-
-```sql
-// Example: GET /employees/search?name=john&minSalary=5000&page=2
-SELECT * FROM employees 
-WHERE 1=1 
-  AND name ILIKE $1 
-  AND salary > $2 
-LIMIT $3 OFFSET $4
-```
-
----
-
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
- * **Node.js** (v20+ LTS recommended)
- * **Docker & Docker Compose** (Recommended for local development)
+- Docker Desktop with Docker Compose, recommended for the complete stack.
+- Node.js and npm if running commands directly on the host.
 
-### Environment Variables
+### Environment variables
 
-Create a `.env` file in the root directory:
+Copy [`.env.example`](.env.example) to `.env`, then replace its placeholder credentials with strong, private values. The required variables are shown below for reference.
 
 ```env
 PORT=3000
 NODE_ENV=development
 
-# Database Configuration
-DB_HOST=localhost # Change to 'db' if running via Docker Compose
+DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
-DB_PASSWORD=your_sercure_password
+DB_PASSWORD=replace_with_a_database_password
 DB_NAME=employee_management
+DATABASE_URL=postgres://postgres:replace_with_a_database_password@localhost:5432/employee_management
+
+JWT_SECRET=replace_with_a_secret_of_at_least_32_characters
+JWT_EXPIRES_IN=1h
+SALT_ROUNDS=10
+
+REDIS_PASSWORD=replace_with_a_redis_password
+REDIS_URL=redis://:replace_with_a_redis_password@redis:6379
 ```
 
-### Running with Docker
+When the API runs directly on the host, use `localhost` instead of the Docker service name `redis` in `REDIS_URL`.
 
-This project is fully containerized to ensure environment parity. To run both the API and PostgreSQL database locally without installing dependencies on your host machine:
+### Run with Docker
 
-1. Ensure Docker Desktop is running.
-2. Run the following command in the project root:
+Build and start the API, PostgreSQL, and Redis:
+
 ```bash
 docker compose up --build
 ```
-3. The API will be vailable at `http://localhost:3000`.
 
-### Running Locally (Without Docker)
+On the first run, leave the containers running and apply the database migration from the host:
 
-1. Install dependencies: `npm install`
-2. Ensure a local PostgreSQL instance is running and matches your `.env` configuration.
-3. Start development server: `npm run dev`
-
----
-
-## API Endpoints
-
-### Employees
-
-* `GET /employees` - List all employees
-* `GET /employees/:id` - Get a specific employee
-* `POST /employees` - Create a new employee
-* `PUT /employees/:id` - Update an existing employee
-* `DELETE /employees/:id` - Delete an employee
-
-### Search & Statistics
-
-* `GET /employees/search` - Search employees with dynamic filters and pagination
-    * Query params: `name`, `role`, `minSalary`, `active`, `page` (default: 1), `limit` (default: 10)
-* `GET /employees/stats` - Get aggregated employee statistics (counts, salary averages, role distribution)
-
----
-
-## Example Requests
-
-### Create Employee
-
-```json
-POST /employees
-Content-Type: application/json
-
-{
-    "name": "John Doe",
-    "role": "Backend Engineer",
-    "salary": 5000,
-    "active": true
-}
+```bash
+npm install
+npm run migrate:up
 ```
 
-### Search Employees
+For this command, `DATABASE_URL` must use `localhost:5432`, as shown in `.env.example`. Migrations are explicit and are not run automatically when the containers start.
 
-```http
-GET /employees/search?name=john&minSalary=4000
+The API is available at `http://localhost:3000`.
+
+Stop the stack without deleting the PostgreSQL volume:
+
+```bash
+docker compose down
 ```
 
----
+### Run locally
 
-## Planned Improvements
+Install dependencies:
 
-* **Database Migrations:** Implement version-controlled schema changes (e.g., `node-pg-migrate` or `Prisma`)
-* **API Documentation:** Auto-generated OpenAPI/Swagger documentation.
-* **CI/CD Pipeline:** Automated testing and building via GitHub Actions.
+```bash
+npm install
+```
 
-----
+Start PostgreSQL and Redis with values matching `.env`, apply the database migration, and start the development server:
+
+```bash
+npm run migrate:up
+npm run dev
+```
+
+## Database migrations and seed data
+
+Apply pending migrations:
+
+```bash
+npm run migrate:up
+```
+
+Roll back the latest migration:
+
+```bash
+npm run migrate:down
+```
+
+Populate development data:
+
+```bash
+npm run db:seed
+```
+
+Migration commands use `DATABASE_URL` from `.env`.
+
+## API documentation
+
+In a non-production environment, interactive Swagger documentation is available at:
+
+```text
+http://localhost:3000/api-docs
+```
+
+The generated OpenAPI document is available at:
+
+```text
+http://localhost:3000/api-docs/openapi.json
+```
+
+## API endpoints
+
+### Public endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/` | Basic server health response |
+| `POST` | `/auth/register` | Register a user |
+| `POST` | `/auth/login` | Authenticate and receive a JWT |
+
+### Authenticated employee endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/employees` | List accessible employees with pagination |
+| `GET` | `/employees/:id` | Get an accessible employee by ID |
+| `POST` | `/employees` | Create an employee for the authenticated user |
+| `PUT` | `/employees/:id` | Update an accessible employee |
+| `DELETE` | `/employees/:id` | Delete an employee; admin only |
+| `GET` | `/employees/search` | Search and filter accessible employees |
+| `GET` | `/employees/stats` | Return aggregate statistics for accessible employees |
+
+`GET /employees` accepts `page` and `limit`. The search endpoint accepts `name`, `role`, `minSalary`, `active`, `page`, and `limit`.
+
+## Testing
+
+Run tests in watch mode:
+
+```bash
+npm test
+```
+
+Run the test suite once:
+
+```bash
+npm run test:run
+```
+
+Run only local unit tests, which mock PostgreSQL and Redis dependencies:
+
+```bash
+npm run test:run -- src/tests/unit
+```
+
+Integration tests require the PostgreSQL test database configured in `.env.test`. `DB_NAME` and the database name at the end of `DATABASE_URL` must refer to that same test database, and its migrations must be applied before the suite runs. Redis behavior is unit-tested through mocked client responses and can be smoke-tested with the Docker Compose stack.
+
+## Build and start
+
+Create the production JavaScript output:
+
+```bash
+npm run build
+```
+
+Start the compiled application:
+
+```bash
+npm start
+```
+
+Tests are excluded from `dist`; Vitest discovers the TypeScript tests under `src/tests` directly.
+
+## Project scope
+
+This repository is considered complete when its existing behavior is documented and verified locally. Public deployment, cloud infrastructure, CI/CD, and additional product features are intentionally outside its scope.
