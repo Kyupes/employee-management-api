@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as services from '../../services/employeesServices';
 import * as repository from '../../repository/employeesRepository';
 import { AppError } from '../../errors/appError';
-import { ensureVersion, getVersion, incrementVersion } from '../../cache/cacheVersionService';
+import { ensureVersion, incrementVersion } from '../../cache/cacheVersionService';
 import { get, set } from '../../cache/cacheService';
 
 vi.mock('../../repository/employeesRepository');
@@ -11,7 +11,7 @@ vi.mock('../../cache/cacheVersionService');
 
 describe('Employee Services', () => {
     beforeEach(() => {
-        vi.clearAllMocks()
+        vi.resetAllMocks();
     });
     
     const employee1 = {
@@ -49,6 +49,54 @@ describe('Employee Services', () => {
     };
 
     const employees = [employee1, employee2, employee3];
+
+    const defaultPagination = { page: 1, limit: 10 };
+    const defaultUserId = 1;
+    const defaultRole = 'user';
+
+    describe('getAllEmployees', () => {
+        const listVersion = 1;
+        const employeesListKey = `employees:list:v${listVersion}:page:${defaultPagination.page}:limit:${defaultPagination.limit}:userId:${defaultUserId}:role:${defaultRole}`;
+        const ttl = 300;
+
+        it('should get employees from repo when cache version missing', async () => {
+            vi.mocked(ensureVersion).mockResolvedValue(null);
+            vi.mocked(repository.findAll).mockResolvedValue(employees);
+            const result = await services.getAllEmployees(defaultPagination, defaultUserId, defaultRole);
+            expect(set).not.toHaveBeenCalled();
+            expect(get).not.toHaveBeenCalled();
+            expect(repository.findAll).toHaveBeenCalledTimes(1);
+            expect(repository.findAll).toHaveBeenCalledWith(defaultPagination, defaultUserId, defaultRole);
+            expect(result).toStrictEqual(employees);
+        });
+
+        it('should get employees from cache when version and cache list exists', async () => {
+            vi.mocked(ensureVersion).mockResolvedValue(1);
+            vi.mocked(get).mockResolvedValue(employees);
+            const result = await services.getAllEmployees(defaultPagination, defaultUserId, defaultRole);
+            expect(set).not.toHaveBeenCalled();
+            expect(get).toHaveBeenCalledWith(employeesListKey);
+            expect(get).toHaveBeenCalledTimes(1);
+            expect(repository.findAll).not.toHaveBeenCalled();
+            expect(result).toStrictEqual(employees);
+        });
+
+        it('should get employees from repo and set cache when version existent', async () => {
+            vi.mocked(ensureVersion).mockResolvedValue(listVersion);
+            vi.mocked(get).mockResolvedValue(null);
+            vi.mocked(repository.findAll).mockResolvedValue(employees);
+            const result = await services.getAllEmployees(defaultPagination, defaultUserId, defaultRole);
+            expect(get).toHaveBeenCalledTimes(1);
+            expect(get).toHaveBeenCalledWith(employeesListKey);
+            expect(set).toHaveBeenCalledWith(employeesListKey, employees, ttl);
+            expect(set).toHaveBeenCalledTimes(1);
+            expect(repository.findAll).toHaveBeenCalledTimes(1);
+            expect(repository.findAll).toHaveBeenCalledWith(defaultPagination, defaultUserId, defaultRole);
+            expect(result).toStrictEqual(employees);
+        });
+
+    });
+
     
     describe('findEmployeeById', () => {
         it('should return a found employee in repository when cache missing', async () => {
