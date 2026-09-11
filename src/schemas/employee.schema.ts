@@ -64,7 +64,7 @@ export const paginationSchema = z.object({
 export type PaginationQuery = z.infer<typeof paginationSchema>;
 
 export const searchEmployeesQuerySchema = paginationSchema.extend({
-    name: baseEmployeeSchema.shape.name.optional(),
+    name: z.string().trim().min(1).optional(),
     role: baseEmployeeSchema.shape.role.optional(),
     minSalary: z.coerce.number().nonnegative().optional().openapi({
         description: 'Positive salary string coercion for searching',
