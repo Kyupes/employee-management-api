@@ -9,7 +9,7 @@ import { incrementVersion, ensureVersion } from "../cache/cacheVersionService";
 export async function getAllEmployees(pagination: PaginationQuery, userId: number, role: UserRole): Promise<Employee[]>{
     const versionKey = "employees:list:version";
     const ttl = 300;
-    let currVersion: number | null = await get(versionKey);
+    const currVersion = await ensureVersion(versionKey);
     if (currVersion === null){
         return repository.findAll(pagination, userId, role);
     }
