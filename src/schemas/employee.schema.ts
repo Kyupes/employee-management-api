@@ -47,7 +47,14 @@ export const updateEmployeeSchema = baseEmployeeSchema;
 export type UpdateEmployeeInput = z.infer<typeof updateEmployeeSchema>;
 
 export const employeeIdParamSchema = z.object({
-    id: z.coerce.number().int().positive("ID must be a positive integer"),
+    id: z.coerce.number().int().positive("ID must be a positive integer").openapi({
+        param: {
+            name: 'id',
+            in: 'path',
+        },
+        description: 'Employee identifier',
+        example: 1,
+    }),
 });
 export type EmployeeIdParams = z.infer<typeof employeeIdParamSchema>;
 
@@ -64,8 +71,14 @@ export const paginationSchema = z.object({
 export type PaginationQuery = z.infer<typeof paginationSchema>;
 
 export const searchEmployeesQuerySchema = paginationSchema.extend({
-    name: z.string().trim().min(1).optional(),
-    role: baseEmployeeSchema.shape.role.optional(),
+    name: z.string().trim().min(1).optional().openapi({
+        description: 'Case-insensitive partial employee name',
+        example: 'John',
+    }),
+    role: z.string().optional().openapi({
+        description: 'Case-insensitive partial employee role',
+        example: 'Developer',
+    }),
     minSalary: z.coerce.number().nonnegative().optional().openapi({
         description: 'Positive salary string coercion for searching',
         example: '3500',
@@ -77,3 +90,21 @@ export const searchEmployeesQuerySchema = paginationSchema.extend({
     }),
 }).strict();
 export type SearchEmployeesQuery = z.infer<typeof searchEmployeesQuerySchema>;
+
+export const employeeStatsResponseSchema = z.object({
+    totalEmployees: z.number().nonnegative().openapi({ example: 4 }),
+    activeEmployees: z.number().nonnegative().openapi({ example: 3 }),
+    inactiveEmployees: z.number().nonnegative().openapi({ example: 1 }),
+    averageSalary: z.number().nonnegative().openapi({ example: 4900 }),
+    highestSalary: z.number().nonnegative().openapi({ example: 6000 }),
+    lowestSalary: z.number().nonnegative().openapi({ example: 4000 }),
+    roles: z.record(z.string(), z.number().nonnegative()).openapi({
+        description: 'Employee count grouped by role',
+        example: {
+            'Frontend Developer': 1,
+            'Backend Developer': 2,
+        },
+    }),
+}).openapi('EmployeeStatsResponse', {
+    description: 'Aggregate statistics for employees accessible to the authenticated user',
+});
